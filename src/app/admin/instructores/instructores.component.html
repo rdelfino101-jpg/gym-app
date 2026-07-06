@@ -1,0 +1,28 @@
+<div class="p-8 max-w-2xl">
+  <h1 class="font-display font-bold text-2xl mb-1">Instructores</h1>
+  <p class="text-text-muted text-sm mb-6">Gestiona el catálogo de instructores del gym.</p>
+
+  <div class="bg-surface border border-border rounded p-5 mb-6 flex gap-3">
+    <input [(ngModel)]="nuevoNombre" name="nuevoNombre" type="text" placeholder="Nombre del instructor"
+      (keyup.enter)="agregar()"
+      class="flex-1 bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text focus:outline-none focus:border-accent" />
+    <button (click)="agregar()" [disabled]="guardando"
+      class="bg-accent text-[#181410] rounded-lg px-5 py-2.5 text-sm font-bold hover:brightness-110 disabled:opacity-50">
+      Agregar
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="text-text-muted text-sm">Cargando...</div>
+
+  <div class="space-y-2">
+    <div *ngFor="let i of instructores" class="bg-surface border border-border rounded p-4 flex items-center justify-between">
+      <span [class.text-text-faint]="!i.activo" [class.line-through]="!i.activo">{{ i.nombre }}</span>
+      <button (click)="toggleActivo(i)"
+        class="text-sm font-semibold px-3 py-1.5 rounded-lg border transition"
+        [class.border-accent]="!i.activo" [class.text-accent]="!i.activo"
+        [class.border-border]="i.activo" [class.text-text-muted]="i.activo">
+        {{ i.activo ? 'Desactivar' : 'Activar' }}
+      </button>
+    </div>
+  </div>
+</div>

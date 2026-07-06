@@ -1,0 +1,31 @@
+<div class="min-h-screen bg-bg text-text font-body">
+  <header class="border-b border-border px-8 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-8">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-accent flex items-center justify-center font-display font-extrabold text-lg text-[#161513]">G</div>
+        <div class="font-display font-bold text-lg">{{ nombreGym() }}</div>
+      </div>
+
+      <nav class="flex items-center gap-1" *ngIf="auth.isAdmin()">
+        <a routerLink="/admin" routerLinkActive="bg-surface-2 text-accent" [routerLinkActiveOptions]="{exact: true}"
+          class="px-3 py-2 rounded-lg text-sm text-text-muted hover:text-text transition">Solicitudes</a>
+        <a routerLink="/admin/instructores" routerLinkActive="bg-surface-2 text-accent"
+          class="px-3 py-2 rounded-lg text-sm text-text-muted hover:text-text transition">Instructores</a>
+        <a routerLink="/admin/clases" routerLinkActive="bg-surface-2 text-accent"
+          class="px-3 py-2 rounded-lg text-sm text-text-muted hover:text-text transition">Clases</a>
+        <a routerLink="/admin/horarios" routerLinkActive="bg-surface-2 text-accent"
+          class="px-3 py-2 rounded-lg text-sm text-text-muted hover:text-text transition">Horarios</a>
+      </nav>
+    </div>
+
+    <div class="flex items-center gap-4" *ngIf="auth.profile() as p">
+      <span class="text-text-muted text-sm">{{ p.nombre }} {{ p.apellido }}</span>
+      <button (click)="auth.signOut()"
+        class="bg-surface-2 border border-border rounded-lg px-4 py-2 text-sm text-text hover:border-accent transition">
+        Cerrar sesión
+      </button>
+    </div>
+  </header>
+
+  <router-outlet></router-outlet>
+</div>

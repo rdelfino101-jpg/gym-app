@@ -1,0 +1,32 @@
+<div class="p-8 max-w-2xl">
+  <h1 class="font-display font-bold text-2xl mb-1">Clases</h1>
+  <p class="text-text-muted text-sm mb-6">Gestiona el catálogo de tipos de clase.</p>
+
+  <div class="bg-surface border border-border rounded p-5 mb-6 space-y-3">
+    <input [(ngModel)]="nuevoNombre" name="nuevoNombre" type="text" placeholder="Nombre (ej. CrossFit)"
+      class="w-full bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text focus:outline-none focus:border-accent" />
+    <input [(ngModel)]="nuevaDescripcion" name="nuevaDescripcion" type="text" placeholder="Descripción (opcional)"
+      class="w-full bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text focus:outline-none focus:border-accent" />
+    <button (click)="agregar()" [disabled]="guardando"
+      class="w-full bg-accent text-[#181410] rounded-lg py-2.5 text-sm font-bold hover:brightness-110 disabled:opacity-50">
+      Agregar clase
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="text-text-muted text-sm">Cargando...</div>
+
+  <div class="space-y-2">
+    <div *ngFor="let c of clases" class="bg-surface border border-border rounded p-4 flex items-center justify-between">
+      <div [class.text-text-faint]="!c.activo">
+        <div class="font-semibold" [class.line-through]="!c.activo">{{ c.nombre }}</div>
+        <div class="text-sm text-text-muted" *ngIf="c.descripcion">{{ c.descripcion }}</div>
+      </div>
+      <button (click)="toggleActivo(c)"
+        class="text-sm font-semibold px-3 py-1.5 rounded-lg border transition"
+        [class.border-accent]="!c.activo" [class.text-accent]="!c.activo"
+        [class.border-border]="c.activo" [class.text-text-muted]="c.activo">
+        {{ c.activo ? 'Desactivar' : 'Activar' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,1 +1,23 @@
-/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.gym-calendar {
+  --fc-border-color: #302d29;
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: #211f1d;
+  --fc-list-event-hover-bg-color: #211f1d;
+  --fc-today-bg-color: rgba(255, 95, 31, 0.08);
+  --fc-button-bg-color: #211f1d;
+  --fc-button-border-color: #302d29;
+  --fc-button-active-bg-color: #ff5f1f;
+  --fc-button-active-border-color: #ff5f1f;
+  --fc-button-hover-bg-color: #302d29;
+  color: #f5f3ee;
+}
+.gym-calendar .fc-col-header-cell, .gym-calendar .fc-timegrid-slot-label {
+  color: #a8a39a;
+}
+.gym-calendar .fc-button {
+  text-transform: capitalize;
+}

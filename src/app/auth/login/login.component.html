@@ -1,0 +1,44 @@
+<div class="min-h-screen bg-bg text-text flex items-center justify-center relative overflow-hidden">
+  <div class="fixed top-0 left-0 w-full h-1.5 bg-[repeating-linear-gradient(135deg,theme(colors.accent)_0_14px,#1a1917_14px_28px)] z-10"></div>
+  <div class="fixed bottom-0 left-0 w-full h-1.5 bg-[repeating-linear-gradient(135deg,theme(colors.accent)_0_14px,#1a1917_14px_28px)] z-10"></div>
+
+  <div class="w-full max-w-md p-8 z-20">
+    <div class="flex items-center gap-3 mb-10">
+      <div class="w-11 h-11 rounded-lg bg-accent flex items-center justify-center font-display font-extrabold text-2xl text-[#161513]">G</div>
+      <div>
+        <div class="font-display font-bold text-2xl">GYM ADMIN</div>
+        <div class="text-[11px] uppercase tracking-widest text-text-faint mt-1">Iniciar sesión</div>
+      </div>
+    </div>
+
+    <div class="bg-surface border border-border rounded p-8">
+      <h1 class="font-display font-bold text-2xl mb-1">Bienvenido de nuevo</h1>
+      <p class="text-text-muted text-sm mb-7">Ingresa tus datos para continuar.</p>
+
+      <div *ngIf="error" class="bg-danger/10 border border-danger/30 text-red-300 text-sm px-3 py-2.5 rounded mb-4">{{ error }}</div>
+
+      <form (ngSubmit)="onSubmit()">
+        <div class="mb-4">
+          <label class="block text-xs font-semibold uppercase tracking-wide text-text-muted mb-2">Correo electrónico</label>
+          <input [(ngModel)]="email" name="email" type="email" required
+            class="w-full bg-surface-2 border border-border rounded-lg px-3.5 py-3 text-sm text-text focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-dim" />
+        </div>
+        <div class="mb-6">
+          <label class="block text-xs font-semibold uppercase tracking-wide text-text-muted mb-2">Contraseña</label>
+          <input [(ngModel)]="password" name="password" type="password" required
+            class="w-full bg-surface-2 border border-border rounded-lg px-3.5 py-3 text-sm text-text focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-dim" />
+        </div>
+
+        <button type="submit" [disabled]="loading"
+          class="w-full bg-accent text-[#181410] rounded-lg py-3.5 text-sm font-bold hover:brightness-110 active:scale-[0.99] transition disabled:opacity-50">
+          {{ loading ? 'Ingresando...' : 'Ingresar' }}
+        </button>
+      </form>
+
+      <p class="text-text-muted text-sm mt-6 text-center">
+        ¿No tienes cuenta?
+        <a routerLink="/registro" class="text-accent font-semibold hover:brightness-110">Regístrate</a>
+      </p>
+    </div>
+  </div>
+</div>

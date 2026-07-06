@@ -1,0 +1,158 @@
+<div class="p-8 max-w-7xl mx-auto">
+  <h1 class="font-display font-bold text-2xl mb-1">Horarios</h1>
+  <p class="text-text-muted text-sm mb-6">Gestiona el horario semanal recurrente y eventos especiales.</p>
+
+  <div class="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6 items-start">
+    <div class="space-y-8">
+
+      <div *ngIf="clasesOpciones.length === 0 || instructoresOpciones.length === 0"
+        class="bg-danger/10 border border-danger/30 text-red-300 text-sm px-4 py-3 rounded">
+        Necesitas al menos una clase y un instructor activos antes de poder crear un horario.
+      </div>
+
+      <div class="bg-surface border border-border rounded p-5 space-y-3" *ngIf="clasesOpciones.length && instructoresOpciones.length">
+        <div class="flex gap-2 mb-1">
+          <button type="button" (click)="modoNuevo = 'recurrente'"
+            class="flex-1 text-sm font-semibold py-2 rounded-lg border transition"
+            [class.bg-accent]="modoNuevo === 'recurrente'" [class.text-[#181410]]="modoNuevo === 'recurrente'"
+            [class.border-accent]="modoNuevo === 'recurrente'"
+            [class.border-border]="modoNuevo !== 'recurrente'" [class.text-text-muted]="modoNuevo !== 'recurrente'">
+            Recurrente
+          </button>
+          <button type="button" (click)="modoNuevo = 'especial'"
+            class="flex-1 text-sm font-semibold py-2 rounded-lg border transition"
+            [class.bg-accent]="modoNuevo === 'especial'" [class.text-[#181410]]="modoNuevo === 'especial'"
+            [class.border-accent]="modoNuevo === 'especial'"
+            [class.border-border]="modoNuevo !== 'especial'" [class.text-text-muted]="modoNuevo !== 'especial'">
+            Evento especial
+          </button>
+        </div>
+
+        <select [(ngModel)]="nuevoClaseId" name="nuevoClaseId"
+          class="w-full bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text focus:outline-none focus:border-accent">
+          <option value="" disabled selected>Clase</option>
+          <option *ngFor="let c of clasesOpciones" [value]="c.id">{{ c.nombre }}</option>
+        </select>
+        <select [(ngModel)]="nuevoInstructorId" name="nuevoInstructorId"
+          class="w-full bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text focus:outline-none focus:border-accent">
+          <option value="" disabled selected>Instructor</option>
+          <option *ngFor="let i of instructoresOpciones" [value]="i.id">{{ i.nombre }}</option>
+        </select>
+
+        <div class="grid grid-cols-2 gap-3" *ngIf="modoNuevo === 'recurrente'">
+          <select [(ngModel)]="nuevoDia" name="nuevoDia"
+            class="bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text focus:outline-none focus:border-accent">
+            <option [value]="null" disabled selected>Día</option>
+            <option *ngFor="let d of dias; let idx = index" [value]="idx">{{ d }}</option>
+          </select>
+          <input [(ngModel)]="nuevaHora" name="nuevaHora" type="time"
+            class="bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text focus:outline-none focus:border-accent" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3" *ngIf="modoNuevo === 'especial'">
+          <input [(ngModel)]="nuevaFechaEspecifica" name="nuevaFechaEspecifica" type="date"
+            class="bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text focus:outline-none focus:border-accent" />
+          <input [(ngModel)]="nuevaHora" name="nuevaHoraEspecial" type="time"
+            class="bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text focus:outline-none focus:border-accent" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <input [(ngModel)]="nuevaDuracion" name="nuevaDuracion" type="number" min="5" step="5" placeholder="Duración (min)"
+            class="bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text focus:outline-none focus:border-accent" />
+          <input [(ngModel)]="nuevaCapacidad" name="nuevaCapacidad" type="number" min="1" placeholder="Cupo"
+            class="bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text focus:outline-none focus:border-accent" />
+        </div>
+        <button (click)="agregar()" [disabled]="guardando"
+          class="w-full bg-accent text-[#181410] rounded-lg py-2.5 text-sm font-bold hover:brightness-110 disabled:opacity-50">
+          {{ modoNuevo === 'recurrente' ? 'Agregar horario recurrente' : 'Agregar evento especial' }}
+        </button>
+      </div>
+
+      <div class="bg-surface border border-border rounded p-5 space-y-3" *ngIf="horariosRecurrentes.length">
+        <h2 class="font-display font-bold text-base">Excepción puntual</h2>
+        <select [(ngModel)]="excHorarioId" name="excHorarioId"
+          class="w-full bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text focus:outline-none focus:border-accent">
+          <option value="" disabled selected>Horario recurrente</option>
+          <option *ngFor="let h of horariosRecurrentes" [value]="h.id">
+            {{ h.clases?.nombre }} · {{ diaNombre(h.dia_semana!) }} {{ h.hora.slice(0,5) }}
+          </option>
+        </select>
+        <div class="grid grid-cols-2 gap-3">
+          <input [(ngModel)]="excFecha" name="excFecha" type="date"
+            class="bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text focus:outline-none focus:border-accent" />
+          <select [(ngModel)]="excTipo" name="excTipo"
+            class="bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text focus:outline-none focus:border-accent">
+            <option value="cancelada">Cancelar ese día</option>
+            <option value="instructor_reemplazo">Cambiar instructor</option>
+          </select>
+        </div>
+        <select [(ngModel)]="excInstructorId" name="excInstructorId" *ngIf="excTipo === 'instructor_reemplazo'"
+          class="w-full bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text focus:outline-none focus:border-accent">
+          <option value="" disabled selected>Instructor de reemplazo</option>
+          <option *ngFor="let i of instructoresOpciones" [value]="i.id">{{ i.nombre }}</option>
+        </select>
+        <input [(ngModel)]="excMotivo" name="excMotivo" type="text" placeholder="Motivo (opcional)"
+          class="w-full bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text focus:outline-none focus:border-accent" />
+        <button (click)="agregarExcepcion()" [disabled]="guardandoExcepcion"
+          class="w-full bg-surface-2 border border-accent text-accent rounded-lg py-2.5 text-sm font-bold hover:bg-accent hover:text-[#181410] transition disabled:opacity-50">
+          Agregar excepción
+        </button>
+
+        <div class="space-y-2 pt-2" *ngIf="excepciones.length">
+          <div *ngFor="let e of excepciones" class="flex items-center justify-between text-sm bg-surface-2 rounded-lg px-3 py-2">
+            <div>
+              <span class="font-semibold">{{ e.horarios?.clases?.nombre }}</span>
+              · {{ e.fecha }} ·
+              <span [class.text-danger]="e.tipo === 'cancelada'" [class.text-accent]="e.tipo === 'instructor_reemplazo'">
+                {{ e.tipo === 'cancelada' ? 'Cancelada' : 'Instructor reemplazado' }}
+              </span>
+            </div>
+            <button (click)="borrarExcepcion(e)" class="text-text-faint hover:text-danger text-xs font-semibold">Quitar</button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="loading" class="text-text-muted text-sm">Cargando...</div>
+
+      <div>
+        <h2 class="font-display font-bold text-base mb-2">Horario recurrente</h2>
+        <div class="space-y-2">
+          <div *ngFor="let h of horariosRecurrentes" class="bg-surface border border-border rounded p-4 flex items-center justify-between">
+            <div [class.text-text-faint]="!h.activo">
+              <div class="font-semibold" [class.line-through]="!h.activo">{{ h.clases?.nombre }}</div>
+              <div class="text-sm text-text-muted">{{ diaNombre(h.dia_semana!) }} · {{ h.hora.slice(0,5) }} ({{ h.duracion_minutos }} min) · {{ h.instructores?.nombre }} · cupo {{ h.capacidad }}</div>
+            </div>
+            <button (click)="toggleActivo(h)"
+              class="text-sm font-semibold px-3 py-1.5 rounded-lg border transition"
+              [class.border-accent]="!h.activo" [class.text-accent]="!h.activo"
+              [class.border-border]="h.activo" [class.text-text-muted]="h.activo">
+              {{ h.activo ? 'Desactivar' : 'Activar' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="horariosEspeciales.length">
+        <h2 class="font-display font-bold text-base mb-2">Eventos especiales</h2>
+        <div class="space-y-2">
+          <div *ngFor="let h of horariosEspeciales" class="bg-surface border border-border rounded p-4 flex items-center justify-between">
+            <div [class.text-text-faint]="!h.activo">
+              <div class="font-semibold" [class.line-through]="!h.activo">⭐ {{ h.clases?.nombre }}</div>
+              <div class="text-sm text-text-muted">{{ h.fecha_especifica }} · {{ h.hora.slice(0,5) }} ({{ h.duracion_minutos }} min) · {{ h.instructores?.nombre }} · cupo {{ h.capacidad }}</div>
+            </div>
+            <button (click)="toggleActivo(h)"
+              class="text-sm font-semibold px-3 py-1.5 rounded-lg border transition"
+              [class.border-accent]="!h.activo" [class.text-accent]="!h.activo"
+              [class.border-border]="h.activo" [class.text-text-muted]="h.activo">
+              {{ h.activo ? 'Desactivar' : 'Activar' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-surface border border-border rounded p-4 gym-calendar lg:sticky lg:top-4">
+      <full-calendar [options]="calendarOptions"></full-calendar>
+    </div>
+  </div>
+</div>
