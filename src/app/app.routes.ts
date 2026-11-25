@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
-import { AppShellComponent } from './shared/app-shell/app-shell.component';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
@@ -9,7 +8,7 @@ export const routes: Routes = [
   { path: 'registro', loadComponent: () => import('./auth/registro/registro.component').then(m => m.RegistroComponent) },
   {
     path: '',
-    component: AppShellComponent,
+    loadComponent: () => import('./shared/app-shell/app-shell.component').then(m => m.AppShellComponent),
     children: [
       {
         path: 'admin',
