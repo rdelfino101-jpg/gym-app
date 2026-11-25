@@ -1,31 +1,64 @@
-<div class="min-h-screen bg-bg text-text font-body">
-  <header class="border-b border-border px-8 py-4 flex items-center justify-between">
-    <div class="flex items-center gap-8">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-accent flex items-center justify-center font-display font-extrabold text-lg text-[#161513]">G</div>
-        <div class="font-display font-bold text-lg">{{ nombreGym() }}</div>
+<!-- ===== Admin: barra lateral (en pantallas angostas se apila arriba con menú) ===== -->
+<div *ngIf="auth.isAdmin(); else layoutCliente" class="min-h-screen bg-bg text-text font-sans flex flex-col lg:flex-row">
+  <aside class="lg:w-60 lg:shrink-0 lg:min-h-screen border-b lg:border-b-0 lg:border-r border-border bg-[#111111] px-4 py-4 lg:py-6 flex flex-col gap-4 lg:gap-6">
+    <div class="flex items-center justify-between gap-3 px-1.5">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-lg bg-accent text-on-accent flex items-center justify-center font-display italic font-black text-xl">{{ inicialGym() }}</div>
+        <div class="flex flex-col">
+          <span class="font-display italic font-extrabold uppercase text-lg leading-none">{{ nombreGym() }}</span>
+          <span class="text-[11px] text-text-muted mt-0.5">Administración</span>
+        </div>
       </div>
-
-      <nav class="flex items-center gap-1" *ngIf="auth.isAdmin()">
-        <a routerLink="/admin" routerLinkActive="bg-surface-2 text-accent" [routerLinkActiveOptions]="{exact: true}"
-          class="px-3 py-2 rounded-lg text-sm text-text-muted hover:text-text transition">Solicitudes</a>
-        <a routerLink="/admin/instructores" routerLinkActive="bg-surface-2 text-accent"
-          class="px-3 py-2 rounded-lg text-sm text-text-muted hover:text-text transition">Instructores</a>
-        <a routerLink="/admin/clases" routerLinkActive="bg-surface-2 text-accent"
-          class="px-3 py-2 rounded-lg text-sm text-text-muted hover:text-text transition">Clases</a>
-        <a routerLink="/admin/horarios" routerLinkActive="bg-surface-2 text-accent"
-          class="px-3 py-2 rounded-lg text-sm text-text-muted hover:text-text transition">Horarios</a>
-      </nav>
-    </div>
-
-    <div class="flex items-center gap-4" *ngIf="auth.profile() as p">
-      <span class="text-text-muted text-sm">{{ p.nombre }} {{ p.apellido }}</span>
-      <button (click)="auth.signOut()"
-        class="bg-surface-2 border border-border rounded-lg px-4 py-2 text-sm text-text hover:border-accent transition">
-        Cerrar sesión
+      <button type="button" (click)="menuAbierto.set(!menuAbierto())"
+        class="lg:hidden w-11 h-11 rounded-lg border border-border bg-surface flex items-center justify-center text-text"
+        [attr.aria-expanded]="menuAbierto()" aria-controls="menu-admin" aria-label="Abrir o cerrar menú">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
       </button>
     </div>
-  </header>
 
-  <router-outlet></router-outlet>
+    <div id="menu-admin" class="flex flex-col gap-4 lg:flex-1 lg:flex" [class.hidden]="!menuAbierto()">
+      <nav aria-label="Administración" class="flex flex-col gap-1">
+        <a *ngFor="let item of menuAdmin" [routerLink]="item.ruta" routerLinkActive="bg-surface-2 text-accent font-bold"
+          [routerLinkActiveOptions]="{ exact: item.exacto }" (click)="menuAbierto.set(false)"
+          class="flex items-center gap-2.5 h-11 px-3 rounded-lg text-sm font-semibold text-text-muted hover:text-text hover:bg-surface transition">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path [attr.d]="item.icono"></path>
+          </svg>
+          {{ item.texto }}
+        </a>
+      </nav>
+
+      <div class="lg:mt-auto border-t border-border pt-4 flex flex-col gap-3" *ngIf="auth.profile() as p">
+        <span class="px-1.5 text-sm text-text-muted truncate">{{ p.nombre }} {{ p.apellido }}</span>
+        <button type="button" (click)="auth.signOut()"
+          class="h-11 rounded-lg border border-border bg-surface-2 text-sm text-text hover:border-accent transition">
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="flex-1 min-w-0">
+    <router-outlet></router-outlet>
+  </main>
 </div>
+
+<!-- ===== Cliente: encabezado superior ===== -->
+<ng-template #layoutCliente>
+  <div class="min-h-screen bg-bg text-text font-sans">
+    <header class="border-b border-border px-4 sm:px-8 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 shrink-0 rounded-lg bg-accent text-on-accent flex items-center justify-center font-display italic font-black text-xl">{{ inicialGym() }}</div>
+        <div class="font-display italic font-extrabold uppercase text-lg truncate">{{ nombreGym() }}</div>
+      </div>
+      <div class="flex items-center gap-4 shrink-0" *ngIf="auth.profile() as p">
+        <span class="hidden sm:inline text-text-muted text-sm">{{ p.nombre }} {{ p.apellido }}</span>
+        <button type="button" (click)="auth.signOut()"
+          class="h-11 bg-surface-2 border border-border rounded-lg px-4 text-sm text-text hover:border-accent transition">
+          Cerrar sesión
+        </button>
+      </div>
+    </header>
+    <router-outlet></router-outlet>
+  </div>
+</ng-template>
