@@ -1,0 +1,90 @@
+<div class="min-h-screen bg-gym-stripes text-text flex items-center justify-center p-6">
+  <div class="w-full max-w-md">
+    <div class="bg-surface border border-border rounded-xl overflow-hidden shadow-2xl">
+      <div class="h-1.5 w-full gym-top-accent"></div>
+
+      <!-- Verificando el enlace -->
+      <div class="p-8" *ngIf="estado === 'verificando'" role="status">
+        <p class="text-text-muted text-sm">Verificando tu enlace...</p>
+      </div>
+
+      <!-- Formulario de nueva contraseña -->
+      <div class="p-8" *ngIf="estado === 'formulario'">
+        <h1 class="font-display italic font-black uppercase text-4xl tracking-wide mb-1">Nueva contraseña</h1>
+        <p class="text-text-muted text-sm mb-7">Elige una contraseña que no hayas usado antes.</p>
+
+        <div *ngIf="error" role="alert" class="bg-danger/10 border border-danger/40 text-red-300 text-sm px-3.5 py-2.5 rounded-lg mb-5">
+          {{ error }}
+        </div>
+
+        <form (ngSubmit)="onSubmit()" novalidate>
+          <div class="mb-4">
+            <label for="nueva-password" class="block text-xs font-bold uppercase tracking-wider text-text-muted mb-2">
+              Nueva contraseña
+            </label>
+            <div class="relative">
+              <input id="nueva-password" [(ngModel)]="password" name="password" [type]="mostrar ? 'text' : 'password'"
+                required autocomplete="new-password" [attr.minlength]="minLargo"
+                class="w-full bg-surface-2 border border-border rounded-lg pl-4 pr-12 py-3 text-sm text-text focus:outline-none focus:border-accent-orange focus:ring-2 focus:ring-accent-orange/20 transition" />
+              <button type="button" (click)="mostrar = !mostrar"
+                [attr.aria-label]="mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña'" [attr.aria-pressed]="mostrar"
+                class="absolute right-0.5 top-0.5 w-11 h-11 flex items-center justify-center text-text-muted hover:text-text transition">
+                <svg *ngIf="!mostrar" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                <svg *ngIf="mostrar" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-6.5 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c6.5 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"></path></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label for="confirmar-password" class="block text-xs font-bold uppercase tracking-wider text-text-muted mb-2">
+              Confirmar contraseña
+            </label>
+            <input id="confirmar-password" [(ngModel)]="confirmar" name="confirmar" [type]="mostrar ? 'text' : 'password'"
+              required autocomplete="new-password"
+              class="w-full bg-surface-2 border border-border rounded-lg px-4 py-3 text-sm text-text focus:outline-none focus:border-accent-orange focus:ring-2 focus:ring-accent-orange/20 transition" />
+          </div>
+
+          <ul class="mb-6 space-y-1.5 text-xs" aria-live="polite">
+            <li class="flex items-center gap-2" [ngClass]="largoOk ? 'text-accent' : 'text-text-muted'">
+              <span aria-hidden="true">{{ largoOk ? '✓' : '•' }}</span> Al menos {{ minLargo }} caracteres
+            </li>
+            <li class="flex items-center gap-2" [ngClass]="coinciden ? 'text-accent' : 'text-text-muted'">
+              <span aria-hidden="true">{{ coinciden ? '✓' : '•' }}</span> Las dos contraseñas coinciden
+            </li>
+          </ul>
+
+          <button type="submit" [disabled]="loading"
+            class="w-full bg-accent text-[#0C0C0C] rounded-lg py-3.5 font-display italic font-black uppercase text-xl tracking-wide hover:brightness-110 active:scale-[0.99] transition disabled:opacity-50">
+            {{ loading ? 'Guardando...' : 'Guardar contraseña' }}
+          </button>
+        </form>
+      </div>
+
+      <!-- Enlace inválido o expirado -->
+      <div class="p-8" *ngIf="estado === 'invalido'" role="alert">
+        <h1 class="font-display italic font-black uppercase text-4xl tracking-wide mb-2">Enlace no válido</h1>
+        <p class="text-text-muted text-sm leading-relaxed mb-7">{{ motivoInvalido }} Pide uno nuevo y úsalo en cuanto te llegue.</p>
+        <a routerLink="/recuperar"
+          class="block w-full text-center bg-accent text-[#0C0C0C] rounded-lg py-3.5 font-display italic font-black uppercase text-xl tracking-wide hover:brightness-110 transition">
+          Pedir un nuevo enlace
+        </a>
+        <p class="text-center text-sm mt-5">
+          <a routerLink="/login" class="text-text-muted hover:text-text transition">Volver a iniciar sesión</a>
+        </p>
+      </div>
+
+      <!-- Listo -->
+      <div class="p-8" *ngIf="estado === 'listo'" role="status">
+        <div class="w-12 h-12 rounded-full bg-accent/15 text-accent flex items-center justify-center mb-5">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
+        </div>
+        <h1 class="font-display italic font-black uppercase text-4xl tracking-wide mb-2">Contraseña actualizada</h1>
+        <p class="text-text-muted text-sm mb-7">Ya puedes entrar con tu nueva contraseña.</p>
+        <a routerLink="/login"
+          class="block w-full text-center bg-accent text-[#0C0C0C] rounded-lg py-3.5 font-display italic font-black uppercase text-xl tracking-wide hover:brightness-110 transition">
+          Iniciar sesión
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

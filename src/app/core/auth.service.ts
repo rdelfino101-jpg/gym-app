@@ -80,6 +80,32 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  /**
+   * Envía el correo de recuperación. El enlace regresa a /restablecer.
+   * Esa URL debe estar en Supabase › Authentication › URL Configuration › Redirect URLs.
+   */
+  async enviarEnlaceRecuperacion(email: string) {
+    return this.supabase.client.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/restablecer`,
+    });
+  }
+
+  /** Sesión actual (en /restablecer es la sesión de recuperación que crea el enlace del correo). */
+  async sesionActual() {
+    const { data } = await this.supabase.client.auth.getSession();
+    return data.session;
+  }
+
+  async actualizarContrasena(password: string) {
+    return this.supabase.client.auth.updateUser({ password });
+  }
+
+  /** Cierra la sesión sin redirigir (para mostrar una confirmación antes de ir al login). */
+  async cerrarSesionSilenciosa() {
+    await this.supabase.client.auth.signOut();
+    this.profile.set(null);
+  }
+
   isAdmin(): boolean {
     return this.profile()?.rol === 'admin';
   }

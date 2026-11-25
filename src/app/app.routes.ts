@@ -7,6 +7,8 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: 'login', loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent) },
   { path: 'registro', loadComponent: () => import('./auth/registro/registro.component').then(m => m.RegistroComponent) },
+  { path: 'recuperar', loadComponent: () => import('./auth/recuperar/recuperar.component').then(m => m.RecuperarComponent) },
+  { path: 'restablecer', loadComponent: () => import('./auth/restablecer/restablecer.component').then(m => m.RestablecerComponent) },
   {
     path: '',
     component: AppShellComponent,
