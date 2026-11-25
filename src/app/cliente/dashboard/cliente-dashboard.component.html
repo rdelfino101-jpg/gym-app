@@ -67,14 +67,7 @@
             </div>
             <button (click)="reservar(c)" [disabled]="c.reservando || !puedeReservar() || c.ocupadas >= c.capacidad"
               class="rounded-lg px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider transition disabled:cursor-not-allowed"
-              [class.bg-accent]="c.ocupadas < c.capacidad"
-              [class.text-[#0C0C0C]]="c.ocupadas < c.capacidad"
-              [class.hover:brightness-110]="c.ocupadas < c.capacidad"
-              [class.bg-surface-2]="c.ocupadas >= c.capacidad"
-              [class.border]="c.ocupadas >= c.capacidad"
-              [class.border-danger/40]="c.ocupadas >= c.capacidad"
-              [class.text-danger]="c.ocupadas >= c.capacidad"
-              [class.opacity-60]="c.reservando || !puedeReservar()">
+              [ngClass]="{ 'bg-accent text-[#0C0C0C] hover:brightness-110': c.ocupadas < c.capacidad, 'bg-surface-2 border border-danger/40 text-danger': c.ocupadas >= c.capacidad, 'opacity-60': c.reservando || !puedeReservar() }">
               {{ c.ocupadas >= c.capacidad ? 'Sin cupo' : (c.reservando ? '...' : 'Reservar') }}
             </button>
           </div>
