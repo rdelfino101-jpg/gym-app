@@ -2,22 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .bg-gym-stripes {
+    background-color: #0c0c0c;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.025) 0px,
+      rgba(255, 255, 255, 0.025) 18px,
+      transparent 18px,
+      transparent 44px
+    );
+  }
+
+  .gym-top-accent {
+    background-image: linear-gradient(90deg, #ff5500 0%, #f7ff14 100%);
+  }
+}
+
 .gym-calendar {
-  --fc-border-color: #302d29;
+  --fc-border-color: #2a2a2a;
   --fc-page-bg-color: transparent;
-  --fc-neutral-bg-color: #211f1d;
-  --fc-list-event-hover-bg-color: #211f1d;
-  --fc-today-bg-color: rgba(255, 95, 31, 0.08);
-  --fc-button-bg-color: #211f1d;
-  --fc-button-border-color: #302d29;
-  --fc-button-active-bg-color: #ff5f1f;
-  --fc-button-active-border-color: #ff5f1f;
-  --fc-button-hover-bg-color: #302d29;
-  color: #f5f3ee;
+  --fc-neutral-bg-color: #161616;
+  --fc-list-event-hover-bg-color: #1f1f1f;
+  --fc-today-bg-color: rgba(247, 255, 20, 0.06);
+  --fc-button-bg-color: #1f1f1f;
+  --fc-button-border-color: #2a2a2a;
+  --fc-button-text-color: #f8f9fa;
+  --fc-button-active-bg-color: #f7ff14;
+  --fc-button-active-border-color: #f7ff14;
+  --fc-button-hover-bg-color: #2a2a2a;
+  --fc-event-bg-color: #f7ff14;
+  --fc-event-border-color: #f7ff14;
+  --fc-event-text-color: #0c0c0c;
+  color: #f8f9fa;
 }
-.gym-calendar .fc-col-header-cell, .gym-calendar .fc-timegrid-slot-label {
-  color: #a8a39a;
+
+.gym-calendar .fc-toolbar-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-style: italic;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
+
+.gym-calendar .fc-col-header-cell,
+.gym-calendar .fc-timegrid-slot-label {
+  color: #a1a1aa;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
 .gym-calendar .fc-button {
-  text-transform: capitalize;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.gym-calendar .fc-button-active {
+  color: #0c0c0c !important;
 }

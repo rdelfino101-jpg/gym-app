@@ -1,46 +1,85 @@
-<div class="p-8 max-w-4xl mx-auto">
-  <h1 class="font-display font-bold text-2xl mb-1">Reserva tus clases</h1>
-  <p class="text-text-muted text-sm mb-6">Elige tu próxima clase o gestiona tus reservas.</p>
+<div class="min-h-screen bg-gym-stripes p-6 sm:p-8">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="font-display italic font-black uppercase text-4xl sm:text-5xl tracking-wide mb-1">
+      Reserva tus clases
+    </h1>
+    <p class="text-text-muted text-sm mb-6">Elige tu próxima clase o gestiona tus reservas.</p>
 
-  <div *ngIf="loading" class="text-text-muted text-sm">Cargando...</div>
+    <div *ngIf="loading" class="text-text-muted text-sm">Cargando...</div>
 
-  <ng-container *ngIf="!loading">
-    <div *ngIf="!membresiaActiva" class="bg-danger/10 border border-danger/30 text-red-300 text-sm px-4 py-3 rounded mb-6">
-      Tu membresía está pendiente de aprobación por el gym. Podrás reservar clases una vez sea activada.
-    </div>
-
-    <div *ngIf="membresiaActiva && !esIlimitado" class="bg-surface border border-border rounded px-4 py-3 text-sm mb-6">
-      Te quedan <span class="text-accent font-bold">{{ clasesRestantes }}</span> clases en tu plan.
-    </div>
-
-    <h2 class="font-display font-bold text-lg mb-3">Mis próximas reservas</h2>
-    <div *ngIf="misReservas.length === 0" class="text-text-muted text-sm mb-6">No tienes reservas activas.</div>
-    <div class="space-y-2 mb-8">
-      <div *ngFor="let r of misReservas" class="bg-surface border border-border rounded p-4 flex items-center justify-between">
-        <div>
-          <div class="font-semibold">{{ r.clase_nombre }}</div>
-          <div class="text-sm text-text-muted">{{ r.fecha_clase }} · {{ r.hora }}</div>
-        </div>
-        <button (click)="cancelar(r)" [disabled]="r.cancelando"
-          class="bg-transparent border border-danger text-danger rounded-lg px-4 py-2 text-sm font-semibold hover:bg-danger/10 disabled:opacity-50">
-          {{ r.cancelando ? '...' : 'Cancelar' }}
-        </button>
+    <ng-container *ngIf="!loading">
+      <div *ngIf="!membresiaActiva"
+        class="bg-danger/10 border border-danger/40 text-red-300 text-sm px-5 py-4 rounded-xl mb-6">
+        Tu membresía está pendiente de aprobación por el gym. Podrás reservar clases una vez sea activada.
       </div>
-    </div>
 
-    <h2 class="font-display font-bold text-lg mb-3">Próximas clases disponibles</h2>
-    <div class="space-y-2">
-      <div *ngFor="let c of clasesDisponibles" class="bg-surface border border-border rounded p-4 flex items-center justify-between">
-        <div>
-          <div class="font-semibold">{{ c.clase_nombre }}</div>
-          <div class="text-sm text-text-muted">{{ c.fechaDisplay }} · {{ c.hora }} · {{ c.instructor_nombre }}</div>
-          <div class="text-xs text-text-faint mt-1">{{ c.ocupadas }}/{{ c.capacidad }} cupos ocupados</div>
-        </div>
-        <button (click)="reservar(c)" [disabled]="c.reservando || !puedeReservar() || c.ocupadas >= c.capacidad"
-          class="bg-accent text-[#181410] rounded-lg px-4 py-2 text-sm font-bold hover:brightness-110 disabled:opacity-50">
-          {{ c.ocupadas >= c.capacidad ? 'Sin cupo' : (c.reservando ? '...' : 'Reservar') }}
-        </button>
+      <div *ngIf="membresiaActiva && !esIlimitado"
+        class="bg-surface border-2 border-accent rounded-xl px-5 py-4 mb-8 flex flex-wrap items-center gap-3 shadow-[0_0_24px_rgba(247,255,20,0.12)]">
+        <span class="text-base text-text">
+          Te quedan <span class="text-accent font-display italic font-black text-2xl mx-1">{{ clasesRestantes }} clases</span> en tu plan
+        </span>
+        <span class="bg-accent text-[#0C0C0C] text-xs font-extrabold uppercase tracking-wider px-2.5 py-1 rounded">
+          Plan activo
+        </span>
       </div>
-    </div>
-  </ng-container>
+
+      <!-- Mis próximas reservas -->
+      <div class="mb-10">
+        <h2 class="font-display italic font-extrabold uppercase text-2xl tracking-wide mb-3">
+          Mis próximas reservas
+        </h2>
+        <div *ngIf="misReservas.length === 0"
+          class="bg-surface border border-border rounded-xl p-5 text-text-muted text-sm">
+          No tienes reservas activas.
+        </div>
+
+        <div *ngIf="misReservas.length > 0" class="bg-surface border border-border rounded-xl divide-y divide-border overflow-hidden">
+          <div *ngFor="let r of misReservas"
+            class="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-surface-2/60 transition">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-6 flex-1 items-center">
+              <div class="font-bold text-base text-text">{{ r.clase_nombre }}</div>
+              <div class="text-sm text-text-muted">{{ r.fecha_clase }}</div>
+              <div class="text-sm font-semibold text-text tabular-nums">{{ r.hora }}</div>
+            </div>
+            <button (click)="cancelar(r)" [disabled]="r.cancelando"
+              class="bg-transparent border border-accent-orange text-accent-orange rounded-lg px-4 py-2 text-xs font-extrabold uppercase tracking-wider hover:bg-accent-orange hover:text-[#0C0C0C] transition disabled:opacity-50">
+              {{ r.cancelando ? '...' : 'Cancelar' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Próximas clases disponibles -->
+      <div>
+        <h2 class="font-display italic font-extrabold uppercase text-2xl tracking-wide mb-3">
+          Próximas clases disponibles
+        </h2>
+        <div class="bg-surface border border-border rounded-xl divide-y divide-border overflow-hidden">
+          <div *ngFor="let c of clasesDisponibles"
+            class="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-surface-2/60 transition">
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-1 sm:gap-4 flex-1 items-center">
+              <div class="font-bold text-base text-text">{{ c.clase_nombre }}</div>
+              <div class="text-sm text-text-muted">{{ c.fechaDisplay }} · {{ c.hora }}</div>
+              <div class="text-sm text-text">{{ c.instructor_nombre }}</div>
+              <div class="text-xs font-semibold text-text-muted tabular-nums">
+                {{ c.ocupadas }}/{{ c.capacidad }} cupos ocupados
+              </div>
+            </div>
+            <button (click)="reservar(c)" [disabled]="c.reservando || !puedeReservar() || c.ocupadas >= c.capacidad"
+              class="rounded-lg px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider transition disabled:cursor-not-allowed"
+              [class.bg-accent]="c.ocupadas < c.capacidad"
+              [class.text-[#0C0C0C]]="c.ocupadas < c.capacidad"
+              [class.hover:brightness-110]="c.ocupadas < c.capacidad"
+              [class.bg-surface-2]="c.ocupadas >= c.capacidad"
+              [class.border]="c.ocupadas >= c.capacidad"
+              [class.border-danger/40]="c.ocupadas >= c.capacidad"
+              [class.text-danger]="c.ocupadas >= c.capacidad"
+              [class.opacity-60]="c.reservando || !puedeReservar()">
+              {{ c.ocupadas >= c.capacidad ? 'Sin cupo' : (c.reservando ? '...' : 'Reservar') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
 </div>

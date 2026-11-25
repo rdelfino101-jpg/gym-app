@@ -4,25 +4,23 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        accent: '#ff5f1f',
-        'accent-dim': '#ff5f1f33',
-        bg: '#121110',
-        surface: '#1a1917',
-        'surface-2': '#211f1d',
-        border: '#302d29',
-        text: '#f5f3ee',
-        'text-muted': '#a8a39a',
-        'text-faint': '#6b665e',
-        danger: '#ef4444',
+        bg: "#0C0C0C",
+        surface: "#161616",
+        "surface-2": "#1F1F1F",
+        border: "#2A2A2A",
+        text: "#F8F9FA",
+        "text-muted": "#A1A1AA",
+        "text-faint": "#63636A",
+        accent: "#F7FF14",
+        "accent-dim": "rgba(247, 255, 20, 0.16)",
+        "accent-orange": "#FF5500",
+        danger: "#FF3B30",
       },
       fontFamily: {
-        display: ['"Big Shoulders Display"', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
+        display: ['"Barlow Condensed"', "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
       },
-      borderRadius: {
-        DEFAULT: '10px',
-      }
     },
   },
   plugins: [],
-}
+};
