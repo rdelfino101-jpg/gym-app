@@ -1,0 +1,145 @@
+<div class="px-4 sm:px-8 lg:px-10 py-6 sm:py-8 max-w-5xl flex flex-col gap-5">
+  <header>
+    <h1 class="font-display italic font-black uppercase text-4xl sm:text-5xl leading-none">Clases e instructores</h1>
+    <p class="text-sm text-text-muted mt-1.5">Lo que esté activo aquí aparece al crear horarios.</p>
+  </header>
+
+  <div role="tablist" aria-label="Catálogo" class="flex gap-1.5 border-b border-border">
+    <button type="button" role="tab" [attr.aria-selected]="pestana === 'clases'" (click)="cambiarPestana('clases')"
+      class="h-11 px-4 text-sm font-bold border-b-[3px] -mb-px transition"
+      [ngClass]="pestana === 'clases' ? 'text-text border-accent' : 'text-text-muted border-transparent hover:text-text'">
+      Clases <span class="text-text-muted font-semibold">· {{ activasClases }}</span>
+    </button>
+    <button type="button" role="tab" [attr.aria-selected]="pestana === 'instructores'" (click)="cambiarPestana('instructores')"
+      class="h-11 px-4 text-sm font-bold border-b-[3px] -mb-px transition"
+      [ngClass]="pestana === 'instructores' ? 'text-text border-accent' : 'text-text-muted border-transparent hover:text-text'">
+      Instructores <span class="text-text-muted font-semibold">· {{ activosInstructores }}</span>
+    </button>
+  </div>
+
+  <p *ngIf="loading" class="text-sm text-text-muted">Cargando...</p>
+
+  <!-- ===================== CLASES ===================== -->
+  <ng-container *ngIf="!loading && pestana === 'clases'">
+    <form (ngSubmit)="agregarClase()" class="flex flex-wrap items-end gap-2.5 p-4 bg-surface border border-border rounded-xl">
+      <div class="flex-[1_1_180px] flex flex-col gap-1.5">
+        <label for="nueva-clase" class="text-xs font-bold text-text-muted">Nombre de la clase</label>
+        <input id="nueva-clase" [(ngModel)]="nuevaClaseNombre" name="nuevaClaseNombre" placeholder="Ej. Pilates"
+          class="h-11 bg-surface-2 border border-border rounded-lg px-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-accent transition" />
+      </div>
+      <div class="flex-[2_1_240px] flex flex-col gap-1.5">
+        <label for="nueva-desc" class="text-xs font-bold text-text-muted">Descripción (opcional)</label>
+        <input id="nueva-desc" [(ngModel)]="nuevaClaseDescripcion" name="nuevaClaseDescripcion" placeholder="Qué se trabaja en esta clase"
+          class="h-11 bg-surface-2 border border-border rounded-lg px-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-accent transition" />
+      </div>
+      <button type="submit" [disabled]="guardando"
+        class="h-11 px-5 rounded-lg bg-accent text-on-accent text-xs font-extrabold uppercase tracking-wider hover:brightness-110 transition disabled:opacity-50">
+        Agregar clase
+      </button>
+      <p *ngIf="errorAlta" role="alert" class="w-full text-sm text-red-300">{{ errorAlta }}</p>
+    </form>
+
+    <p *ngIf="clases.length === 0" class="bg-surface border border-border rounded-xl px-5 py-5 text-sm text-text-muted">
+      Aún no hay clases. Agrega la primera arriba.
+    </p>
+
+    <div class="bg-surface border border-border rounded-xl overflow-hidden" *ngIf="clases.length > 0">
+      <div *ngFor="let c of clases" class="px-4 sm:px-5 py-3.5 border-b border-surface-2 last:border-b-0">
+
+        <div *ngIf="editandoId !== c.id" class="flex flex-wrap items-center gap-3.5" [class.opacity-50]="!c.activo">
+          <span class="w-3 h-3 rounded-sm shrink-0" [style.background-color]="color(c.nombre)" aria-hidden="true"></span>
+          <div class="flex-[1_1_200px] min-w-0">
+            <div class="font-bold text-[15px]">{{ c.nombre }}</div>
+            <div class="text-[13px] text-text-muted mt-0.5" *ngIf="c.descripcion">{{ c.descripcion }}</div>
+          </div>
+          <span class="text-[13px] text-text-muted sm:w-40">{{ usoClase(c) }}</span>
+          <button type="button" role="switch" [attr.aria-checked]="c.activo" (click)="alternarClase(c)"
+            [attr.aria-label]="(c.activo ? 'Desactivar ' : 'Activar ') + c.nombre"
+            class="w-[52px] h-[30px] rounded-full p-[3px] flex transition"
+            [ngClass]="c.activo ? 'bg-accent justify-end' : 'bg-border justify-start'">
+            <span class="w-6 h-6 rounded-full" [ngClass]="c.activo ? 'bg-on-accent' : 'bg-text-muted'"></span>
+          </button>
+          <button type="button" (click)="editarClase(c)"
+            class="h-10 px-3.5 rounded-lg border border-border text-[13px] font-semibold hover:border-accent transition">
+            Editar
+          </button>
+        </div>
+
+        <form *ngIf="editandoId === c.id" (ngSubmit)="guardarClase(c)" class="flex flex-wrap items-end gap-2.5">
+          <div class="flex-[1_1_160px] flex flex-col gap-1.5">
+            <label [for]="'edit-nombre-' + c.id" class="text-xs font-bold text-text-muted">Nombre</label>
+            <input [id]="'edit-nombre-' + c.id" [(ngModel)]="editNombre" name="editNombre"
+              class="h-11 bg-surface-2 border border-accent rounded-lg px-3 text-sm text-text focus:outline-none" />
+          </div>
+          <div class="flex-[2_1_240px] flex flex-col gap-1.5">
+            <label [for]="'edit-desc-' + c.id" class="text-xs font-bold text-text-muted">Descripción</label>
+            <input [id]="'edit-desc-' + c.id" [(ngModel)]="editDescripcion" name="editDescripcion"
+              class="h-11 bg-surface-2 border border-border rounded-lg px-3 text-sm text-text focus:outline-none focus:border-accent" />
+          </div>
+          <button type="button" (click)="cancelarEdicion()" class="h-11 px-3.5 rounded-lg border border-border text-[13px] font-semibold">Cancelar</button>
+          <button type="submit" class="h-11 px-5 rounded-lg bg-accent text-on-accent text-xs font-extrabold uppercase tracking-wider hover:brightness-110 transition">Guardar</button>
+          <p *ngIf="errorEdicion" role="alert" class="w-full text-sm text-red-300">{{ errorEdicion }}</p>
+        </form>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ===================== INSTRUCTORES ===================== -->
+  <ng-container *ngIf="!loading && pestana === 'instructores'">
+    <form (ngSubmit)="agregarInstructor()" class="flex flex-wrap items-end gap-2.5 p-4 bg-surface border border-border rounded-xl">
+      <div class="flex-[1_1_220px] flex flex-col gap-1.5">
+        <label for="nuevo-instructor" class="text-xs font-bold text-text-muted">Nombre del instructor</label>
+        <input id="nuevo-instructor" [(ngModel)]="nuevoInstructorNombre" name="nuevoInstructorNombre" placeholder="Nombre y apellido"
+          class="h-11 bg-surface-2 border border-border rounded-lg px-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-accent transition" />
+      </div>
+      <button type="submit" [disabled]="guardando"
+        class="h-11 px-5 rounded-lg bg-accent text-on-accent text-xs font-extrabold uppercase tracking-wider hover:brightness-110 transition disabled:opacity-50">
+        Agregar instructor
+      </button>
+      <p *ngIf="errorAlta" role="alert" class="w-full text-sm text-red-300">{{ errorAlta }}</p>
+    </form>
+
+    <p *ngIf="instructores.length === 0" class="bg-surface border border-border rounded-xl px-5 py-5 text-sm text-text-muted">
+      Aún no hay instructores. Agrega el primero arriba.
+    </p>
+
+    <div class="bg-surface border border-border rounded-xl overflow-hidden" *ngIf="instructores.length > 0">
+      <div *ngFor="let i of instructores" class="px-4 sm:px-5 py-3.5 border-b border-surface-2 last:border-b-0">
+
+        <div *ngIf="editandoId !== i.id" class="flex flex-wrap items-center gap-3.5" [class.opacity-50]="!i.activo">
+          <span class="w-10 h-10 shrink-0 rounded-full bg-surface-2 border border-border flex items-center justify-center text-[13px] font-bold text-text-muted">{{ iniciales(i.nombre) }}</span>
+          <div class="flex-[1_1_160px] min-w-0">
+            <div class="font-bold text-[15px]">{{ i.nombre }}</div>
+            <div class="text-[13px] text-text-muted mt-0.5">{{ usoInstructor(i) }}</div>
+          </div>
+          <div class="flex flex-wrap gap-1.5 sm:w-56">
+            <span *ngFor="let e of clasesDeInstructor(i)" class="inline-flex items-center gap-1.5 h-[26px] px-2 rounded-md text-xs font-semibold" [style.background-color]="e.fondo">
+              <span class="w-2 h-2 rounded-sm" [style.background-color]="e.color" aria-hidden="true"></span>{{ e.nombre }}
+            </span>
+          </div>
+          <button type="button" role="switch" [attr.aria-checked]="i.activo" (click)="alternarInstructor(i)"
+            [attr.aria-label]="(i.activo ? 'Desactivar ' : 'Activar ') + i.nombre"
+            class="w-[52px] h-[30px] rounded-full p-[3px] flex transition"
+            [ngClass]="i.activo ? 'bg-accent justify-end' : 'bg-border justify-start'">
+            <span class="w-6 h-6 rounded-full" [ngClass]="i.activo ? 'bg-on-accent' : 'bg-text-muted'"></span>
+          </button>
+          <button type="button" (click)="editarInstructor(i)"
+            class="h-10 px-3.5 rounded-lg border border-border text-[13px] font-semibold hover:border-accent transition">
+            Editar
+          </button>
+        </div>
+
+        <form *ngIf="editandoId === i.id" (ngSubmit)="guardarInstructor(i)" class="flex flex-wrap items-end gap-2.5">
+          <div class="flex-[1_1_220px] flex flex-col gap-1.5">
+            <label [for]="'edit-inst-' + i.id" class="text-xs font-bold text-text-muted">Nombre</label>
+            <input [id]="'edit-inst-' + i.id" [(ngModel)]="editNombre" name="editNombre"
+              class="h-11 bg-surface-2 border border-accent rounded-lg px-3 text-sm text-text focus:outline-none" />
+          </div>
+          <button type="button" (click)="cancelarEdicion()" class="h-11 px-3.5 rounded-lg border border-border text-[13px] font-semibold">Cancelar</button>
+          <button type="submit" class="h-11 px-5 rounded-lg bg-accent text-on-accent text-xs font-extrabold uppercase tracking-wider hover:brightness-110 transition">Guardar</button>
+          <p *ngIf="errorEdicion" role="alert" class="w-full text-sm text-red-300">{{ errorEdicion }}</p>
+        </form>
+      </div>
+    </div>
+  </ng-container>
+</div>

@@ -1,174 +1,302 @@
-<div class="p-6 sm:p-8 max-w-7xl mx-auto">
-  <h1 class="font-display italic font-black uppercase text-4xl tracking-wide mb-1">Horarios</h1>
-  <p class="text-text-muted text-sm mb-6">Gestiona el horario semanal recurrente y eventos especiales.</p>
+<div class="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col gap-4">
 
-  <div class="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6 items-start">
-    <div class="space-y-6">
+  <header class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="font-display italic font-black uppercase text-4xl sm:text-5xl leading-none">Horarios</h1>
+      <p class="text-sm text-text-muted mt-1.5">Toca un espacio vacío para crear una clase, o una clase para editarla.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <button type="button" (click)="cambiarSemana(-1)" aria-label="Semana anterior"
+        class="w-11 h-11 rounded-lg border border-border bg-surface text-lg hover:border-text-muted transition">‹</button>
+      <button type="button" (click)="irAHoy()" class="min-w-[160px] h-11 px-3 rounded-lg text-sm font-bold"
+        [attr.aria-label]="'Semana del ' + tituloSemana + (semanaOffset !== 0 ? '. Volver a esta semana' : '')">
+        {{ tituloSemana }}
+      </button>
+      <button type="button" (click)="cambiarSemana(1)" aria-label="Semana siguiente"
+        class="w-11 h-11 rounded-lg border border-border bg-surface text-lg hover:border-text-muted transition">›</button>
+      <button type="button" (click)="abrirNuevoSinHora()"
+        class="h-11 px-4 rounded-lg bg-accent text-on-accent text-xs font-extrabold uppercase tracking-wider hover:brightness-110 transition">
+        + Nueva clase
+      </button>
+    </div>
+  </header>
 
-      <div *ngIf="clasesOpciones.length === 0 || instructoresOpciones.length === 0"
-        class="bg-danger/10 border border-danger/40 text-red-300 text-sm px-4 py-3 rounded-xl">
-        Necesitas al menos una clase y un instructor activos antes de poder crear un horario.
+  <div *ngIf="clasesOpciones.length === 0 || instructoresOpciones.length === 0" role="alert"
+    class="bg-surface border border-accent-orange/60 text-sm px-4 py-3 rounded-xl">
+    Para crear horarios necesitas al menos una clase y un instructor activos. Agrégalos en Clases e instructores.
+  </div>
+
+  <div class="flex flex-wrap gap-3.5 text-xs text-text-muted" *ngIf="leyenda.length">
+    <span *ngFor="let l of leyenda" class="inline-flex items-center gap-1.5">
+      <span class="w-2.5 h-2.5 rounded-sm" [style.background-color]="l.color" aria-hidden="true"></span>{{ l.nombre }}
+    </span>
+  </div>
+
+  <div class="flex flex-wrap items-start gap-4">
+
+    <!-- ===== Semana ===== -->
+    <section aria-label="Semana" class="flex-[999_1_560px] min-w-0 bg-surface border border-border rounded-xl overflow-x-auto">
+      <p *ngIf="loading" class="px-5 py-5 text-sm text-text-muted">Cargando...</p>
+
+      <div *ngIf="!loading && filas.length === 0" class="px-5 py-8 text-sm text-text-muted">
+        No hay clases esta semana.
+        <button type="button" (click)="abrirNuevoSinHora()" class="text-accent font-bold ml-1">Crear la primera</button>
       </div>
 
-      <!-- Formulario de creación -->
-      <div class="bg-surface border border-border rounded-xl overflow-hidden" *ngIf="clasesOpciones.length && instructoresOpciones.length">
-        <div class="h-1 w-full gym-top-accent"></div>
-        <div class="p-5 space-y-3">
-          <div class="grid grid-cols-2 gap-2 mb-1">
-            <button type="button" (click)="modoNuevo = 'recurrente'"
-              class="text-xs font-extrabold uppercase tracking-wider py-2.5 rounded-lg border transition"
-              [class.bg-accent]="modoNuevo === 'recurrente'" [class.text-[#0C0C0C]]="modoNuevo === 'recurrente'"
-              [class.border-accent]="modoNuevo === 'recurrente'"
-              [class.border-border]="modoNuevo !== 'recurrente'" [class.text-text-muted]="modoNuevo !== 'recurrente'">
-              Recurrente
+      <div *ngIf="!loading && filas.length > 0" class="grid min-w-[680px]" style="grid-template-columns: 56px repeat(7, minmax(0, 1fr))">
+        <div class="border-b border-border"></div>
+        <div *ngFor="let d of semana" class="py-3 px-1.5 text-center border-b border-border border-l border-l-surface-2">
+          <div class="text-[11px] font-bold" [ngClass]="d.esHoy ? 'text-accent' : 'text-text-muted'">{{ d.corto }}</div>
+          <div class="font-display font-extrabold text-2xl leading-tight" [ngClass]="d.esHoy ? 'text-accent' : 'text-text'">{{ d.numero }}</div>
+        </div>
+
+        <ng-container *ngFor="let hora of filas">
+          <div class="pt-2.5 pr-2 text-right text-xs font-semibold text-text-muted tabular-nums border-b border-surface-2">{{ hora }}</div>
+          <div *ngFor="let d of semana" class="min-h-[78px] p-1 border-b border-surface-2 border-l border-l-surface-2 flex flex-col gap-1">
+            <button type="button" *ngFor="let o of enCelda(d, hora)" (click)="abrirEditar(o)"
+              class="w-full flex-1 text-left rounded-lg px-2 py-1.5 flex flex-col gap-0.5 overflow-hidden"
+              [style.background]="o.excepcion?.tipo === 'cancelada' ? 'repeating-linear-gradient(-45deg, #1A1A1A 0 6px, #161616 6px 12px)' : fondo(o)"
+              [style.border]="borde(o)">
+              <span class="text-xs font-bold truncate" [class.line-through]="o.excepcion?.tipo === 'cancelada'">{{ o.horario.clases?.nombre }}</span>
+              <span class="text-[11px] text-text-muted truncate">{{ instructorDe(o) }}</span>
+              <span class="text-[11px] font-bold truncate" [style.color]="meta(o).color">{{ meta(o).texto }}</span>
             </button>
-            <button type="button" (click)="modoNuevo = 'especial'"
-              class="text-xs font-extrabold uppercase tracking-wider py-2.5 rounded-lg border transition"
-              [class.bg-accent]="modoNuevo === 'especial'" [class.text-[#0C0C0C]]="modoNuevo === 'especial'"
-              [class.border-accent]="modoNuevo === 'especial'"
-              [class.border-border]="modoNuevo !== 'especial'" [class.text-text-muted]="modoNuevo !== 'especial'">
-              Evento especial
+            <button type="button" *ngIf="enCelda(d, hora).length === 0" (click)="abrirNuevo(d, hora)"
+              [attr.aria-label]="'Crear clase el ' + d.corto + ' ' + d.numero + ' a las ' + hora"
+              class="w-full flex-1 rounded-lg text-lg text-text-muted border transition hover:border-dashed hover:border-border focus-visible:border-dashed"
+              [ngClass]="celdaSeleccionada(d, hora) ? 'border-dashed border-accent bg-accent/5 text-accent' : 'border-transparent'">
+              <span [class.opacity-0]="!celdaSeleccionada(d, hora)">+</span>
             </button>
           </div>
+        </ng-container>
+      </div>
+    </section>
 
-          <select [(ngModel)]="nuevoClaseId" name="nuevoClaseId"
-            class="w-full bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text focus:outline-none focus:border-accent-orange">
-            <option value="" disabled selected>Clase</option>
+    <!-- ===== Panel lateral ===== -->
+    <aside aria-label="Detalle" class="flex-[1_1_300px] min-w-0 bg-surface border border-border rounded-xl overflow-hidden lg:sticky lg:top-4">
+      <div class="h-1.5 gym-top-accent"></div>
+
+      <div *ngIf="panel.modo === 'vacio'" class="p-5 text-sm text-text-muted leading-relaxed">
+        Elige una clase de la semana para editarla, o un espacio vacío para crear una nueva.
+      </div>
+
+      <!-- Nueva clase -->
+      <form *ngIf="panel.modo === 'nuevo'" (ngSubmit)="guardarNuevo()" class="p-5 flex flex-col gap-4">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="font-display italic font-black uppercase text-3xl leading-none">Nueva clase</h2>
+            <p class="text-[13px] text-text-muted mt-1 first-letter:uppercase">{{ fechaPanelLarga }}</p>
+          </div>
+          <button type="button" (click)="cerrarPanel()" aria-label="Cerrar" class="w-9 h-9 rounded-lg text-text-muted hover:text-text text-xl">×</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div class="flex flex-col gap-1.5">
+            <label for="n-dia" class="text-xs font-bold text-text-muted">Día</label>
+            <select id="n-dia" [ngModel]="$any(panel).fecha" (ngModelChange)="cambiarFechaNuevo($event)" name="dia"
+              class="h-11 bg-surface-2 border border-border rounded-lg px-2.5 text-sm text-text focus:outline-none focus:border-accent">
+              <option *ngFor="let d of semana" [value]="d.fecha">{{ d.corto }} {{ d.numero }}</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label for="n-hora" class="text-xs font-bold text-text-muted">Hora</label>
+            <input id="n-hora" type="time" [(ngModel)]="fHora" name="hora"
+              class="h-11 bg-surface-2 border border-border rounded-lg px-2.5 text-sm text-text focus:outline-none focus:border-accent" />
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label for="n-clase" class="text-xs font-bold text-text-muted">Clase</label>
+          <select id="n-clase" [(ngModel)]="fClaseId" name="clase"
+            class="h-11 bg-surface-2 border border-border rounded-lg px-2.5 text-sm text-text focus:outline-none focus:border-accent">
             <option *ngFor="let c of clasesOpciones" [value]="c.id">{{ c.nombre }}</option>
           </select>
-
-          <select [(ngModel)]="nuevoInstructorId" name="nuevoInstructorId"
-            class="w-full bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text focus:outline-none focus:border-accent-orange">
-            <option value="" disabled selected>Instructor</option>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label for="n-inst" class="text-xs font-bold text-text-muted">Instructor</label>
+          <select id="n-inst" [(ngModel)]="fInstructorId" name="instructor"
+            class="h-11 bg-surface-2 border border-border rounded-lg px-2.5 text-sm text-text focus:outline-none focus:border-accent">
             <option *ngFor="let i of instructoresOpciones" [value]="i.id">{{ i.nombre }}</option>
           </select>
+        </div>
 
-          <div class="grid grid-cols-2 gap-3" *ngIf="modoNuevo === 'recurrente'">
-            <select [(ngModel)]="nuevoDia" name="nuevoDia"
-              class="bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text focus:outline-none focus:border-accent-orange">
-              <option [value]="null" disabled selected>Día</option>
-              <option *ngFor="let d of dias; let idx = index" [value]="idx">{{ d }}</option>
-            </select>
-            <input [(ngModel)]="nuevaHora" name="nuevaHora" type="time"
-              class="bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text focus:outline-none focus:border-accent-orange" />
+        <ng-container *ngTemplateOutlet="duracionYCupo"></ng-container>
+
+        <fieldset class="flex flex-col gap-1.5">
+          <legend class="text-xs font-bold text-text-muted mb-1.5">Se repite</legend>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" (click)="fRepite = 'semanal'" [attr.aria-pressed]="fRepite === 'semanal'"
+              class="h-11 rounded-lg border text-[13px] font-bold transition"
+              [ngClass]="fRepite === 'semanal' ? 'bg-accent border-accent text-on-accent' : 'bg-surface-2 border-border text-text'">
+              Cada {{ diaPanel }}
+            </button>
+            <button type="button" (click)="fRepite = 'unica'" [attr.aria-pressed]="fRepite === 'unica'"
+              class="h-11 rounded-lg border text-[13px] font-bold transition"
+              [ngClass]="fRepite === 'unica' ? 'bg-accent border-accent text-on-accent' : 'bg-surface-2 border-border text-text'">
+              Solo el {{ fechaPanelCorta }}
+            </button>
           </div>
+        </fieldset>
 
-          <div class="grid grid-cols-2 gap-3" *ngIf="modoNuevo === 'especial'">
-            <input [(ngModel)]="nuevaFechaEspecifica" name="nuevaFechaEspecifica" type="date"
-              class="bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text focus:outline-none focus:border-accent-orange" />
-            <input [(ngModel)]="nuevaHora" name="nuevaHoraEspecial" type="time"
-              class="bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text focus:outline-none focus:border-accent-orange" />
-          </div>
+        <p *ngIf="errorPanel" role="alert" class="text-sm text-red-300">{{ errorPanel }}</p>
 
-          <div class="grid grid-cols-2 gap-3">
-            <input [(ngModel)]="nuevaDuracion" name="nuevaDuracion" type="number" min="5" step="5" placeholder="Duración (min)"
-              class="bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-accent-orange" />
-            <input [(ngModel)]="nuevaCapacidad" name="nuevaCapacidad" type="number" min="1" placeholder="Cupo"
-              class="bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-accent-orange" />
-          </div>
-
-          <button (click)="agregar()" [disabled]="guardando"
-            class="w-full bg-accent text-[#0C0C0C] rounded-lg py-3 font-display italic font-black uppercase text-lg tracking-wide hover:brightness-110 transition disabled:opacity-50">
-            {{ modoNuevo === 'recurrente' ? 'Agregar horario recurrente' : 'Agregar evento especial' }}
+        <div class="flex gap-2.5">
+          <button type="button" (click)="cerrarPanel()" class="flex-1 h-12 rounded-lg border border-border text-sm font-semibold">Cancelar</button>
+          <button type="submit" [disabled]="guardando"
+            class="flex-[2] h-12 rounded-lg bg-accent text-on-accent font-display italic font-black uppercase text-xl hover:brightness-110 transition disabled:opacity-50">
+            {{ guardando ? 'Guardando...' : 'Guardar clase' }}
           </button>
         </div>
-      </div>
+      </form>
 
-      <!-- Excepción puntual -->
-      <div class="bg-surface border border-border rounded-xl p-5 space-y-3" *ngIf="horariosRecurrentes.length">
-        <h2 class="font-display italic font-extrabold uppercase text-xl tracking-wide">Excepción puntual</h2>
-        <select [(ngModel)]="excHorarioId" name="excHorarioId"
-          class="w-full bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text focus:outline-none focus:border-accent-orange">
-          <option value="" disabled selected>Horario recurrente</option>
-          <option *ngFor="let h of horariosRecurrentes" [value]="h.id">
-            {{ h.clases?.nombre }} · {{ diaNombre(h.dia_semana!) }} {{ h.hora.slice(0,5) }}
-          </option>
-        </select>
-        <div class="grid grid-cols-2 gap-3">
-          <input [(ngModel)]="excFecha" name="excFecha" type="date"
-            class="bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text focus:outline-none focus:border-accent-orange" />
-          <select [(ngModel)]="excTipo" name="excTipo"
-            class="bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text focus:outline-none focus:border-accent-orange">
-            <option value="cancelada">Cancelar ese día</option>
-            <option value="instructor_reemplazo">Cambiar instructor</option>
-          </select>
-        </div>
-        <select [(ngModel)]="excInstructorId" name="excInstructorId" *ngIf="excTipo === 'instructor_reemplazo'"
-          class="w-full bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text focus:outline-none focus:border-accent-orange">
-          <option value="" disabled selected>Instructor de reemplazo</option>
-          <option *ngFor="let i of instructoresOpciones" [value]="i.id">{{ i.nombre }}</option>
-        </select>
-        <input [(ngModel)]="excMotivo" name="excMotivo" type="text" placeholder="Motivo (opcional)"
-          class="w-full bg-surface-2 border border-border rounded-lg px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-accent-orange" />
-        <button (click)="agregarExcepcion()" [disabled]="guardandoExcepcion"
-          class="w-full bg-surface-2 border border-accent text-accent rounded-lg py-2.5 text-xs font-extrabold uppercase tracking-wider hover:bg-accent hover:text-[#0C0C0C] transition disabled:opacity-50">
-          Agregar excepción
-        </button>
-
-        <div class="space-y-2 pt-2" *ngIf="excepciones.length">
-          <div *ngFor="let e of excepciones" class="flex items-center justify-between text-xs bg-surface-2 border border-border rounded-lg px-3 py-2.5">
+      <!-- Editar clase -->
+      <div *ngIf="panel.modo === 'editar' && horarioEnPanel as h" class="p-5 flex flex-col gap-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-2.5">
+            <span class="w-3 h-3 rounded-sm mt-2.5 shrink-0" [style.background-color]="colorNombre(h.clases?.nombre)" aria-hidden="true"></span>
             <div>
-              <span class="font-bold text-text">{{ e.horarios?.clases?.nombre }}</span>
-              · {{ e.fecha }} ·
-              <span [class.text-danger]="e.tipo === 'cancelada'" [class.text-accent]="e.tipo === 'instructor_reemplazo'" class="font-semibold">
-                {{ e.tipo === 'cancelada' ? 'Cancelada' : 'Instructor reemplazado' }}
-              </span>
+              <h2 class="font-display italic font-black uppercase text-3xl leading-none">{{ h.clases?.nombre }}</h2>
+              <p class="text-[13px] text-text-muted mt-1">
+                <span class="first-letter:uppercase inline-block">{{ fechaPanelLarga }}</span> · {{ h.hora.slice(0, 5) }}
+                <span *ngIf="h.fecha_especifica"> · evento especial</span>
+              </p>
             </div>
-            <button (click)="borrarExcepcion(e)" class="text-text-muted hover:text-danger font-bold uppercase">Quitar</button>
           </div>
+          <button type="button" (click)="cerrarPanel()" aria-label="Cerrar" class="w-9 h-9 rounded-lg text-text-muted hover:text-text text-xl">×</button>
         </div>
-      </div>
 
-      <div *ngIf="loading" class="text-text-muted text-sm">Cargando...</div>
+        <div *ngIf="h.capacidad <= 0" role="alert"
+          class="px-3.5 py-3 rounded-lg bg-danger/10 border border-danger/40 text-red-300 text-[13px] leading-relaxed">
+          Esta clase tiene cupo 0: nadie puede reservarla. Define cuántas personas caben y guarda.
+        </div>
 
-      <!-- Listado horario recurrente -->
-      <div>
-        <h2 class="font-display italic font-extrabold uppercase text-xl tracking-wide mb-2.5">Horario recurrente</h2>
-        <div class="space-y-2">
-          <div *ngFor="let h of horariosRecurrentes"
-            class="bg-surface border border-border rounded-xl p-4 flex items-center justify-between gap-3">
-            <div [class.text-text-faint]="!h.activo">
-              <div class="font-bold text-sm" [class.line-through]="!h.activo">{{ h.clases?.nombre }}</div>
-              <div class="text-xs text-text-muted mt-0.5 tabular-nums">
-                {{ diaNombre(h.dia_semana!) }} · {{ h.hora.slice(0,5) }} ({{ h.duracion_minutos }} min) · {{ h.instructores?.nombre }} · cupo {{ h.capacidad }}
-              </div>
-            </div>
-            <button (click)="toggleActivo(h)"
-              class="text-xs font-extrabold uppercase tracking-wider px-3 py-1.5 rounded-lg border transition shrink-0"
-              [class.border-accent]="!h.activo" [class.text-accent]="!h.activo"
-              [class.border-border]="h.activo" [class.text-text-muted]="h.activo">
-              {{ h.activo ? 'Desactivar' : 'Activar' }}
+        <!-- Excepción existente ese día -->
+        <div *ngIf="excepcionEnPanel as e" class="px-3.5 py-3 rounded-lg bg-surface-2 border border-border text-[13px] flex items-center justify-between gap-3">
+          <span>
+            <span class="font-bold" [ngClass]="e.tipo === 'cancelada' ? 'text-red-300' : 'text-accent-orange'">
+              {{ e.tipo === 'cancelada' ? 'Cancelada' : 'Reemplazo' }}
+            </span>
+            el {{ fechaPanelCorta }}<span *ngIf="e.tipo === 'instructor_reemplazo'">: la da {{ todosInstructores.get(e.instructor_reemplazo_id ?? '') }}</span>
+          </span>
+          <button type="button" (click)="quitarExcepcion()" class="shrink-0 text-xs font-bold text-text-muted hover:text-text">Quitar</button>
+        </div>
+
+        <form (ngSubmit)="guardarCambios()" class="flex flex-col gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label for="e-inst" class="text-xs font-bold text-text-muted">Instructor {{ h.fecha_especifica ? '' : '(todas las semanas)' }}</label>
+            <select id="e-inst" [(ngModel)]="fInstructorId" name="instructor"
+              class="h-11 bg-surface-2 border border-border rounded-lg px-2.5 text-sm text-text focus:outline-none focus:border-accent">
+              <option *ngFor="let i of instructoresOpciones" [value]="i.id">{{ i.nombre }}</option>
+              <option *ngIf="instructorInactivo()" [value]="fInstructorId">
+                {{ todosInstructores.get(fInstructorId) ?? 'Instructor inactivo' }} (inactivo)
+              </option>
+            </select>
+          </div>
+
+          <ng-container *ngTemplateOutlet="duracionYCupo"></ng-container>
+          <p class="text-xs text-text-muted -mt-2">{{ reservasEnPanel }} {{ reservasEnPanel === 1 ? 'reserva' : 'reservas' }} el {{ fechaPanelCorta }}</p>
+
+          <p *ngIf="errorPanel" role="alert" class="text-sm text-red-300">{{ errorPanel }}</p>
+
+          <button type="submit" [disabled]="guardando"
+            class="h-12 rounded-lg bg-accent text-on-accent font-display italic font-black uppercase text-xl hover:brightness-110 transition disabled:opacity-50">
+            {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+          </button>
+        </form>
+
+        <!-- Solo ese día (solo clases semanales y sin excepción previa) -->
+        <div *ngIf="!h.fecha_especifica && !excepcionEnPanel" class="border-t border-border pt-4 flex flex-col gap-2">
+          <span class="text-xs font-bold text-text-muted">Solo el {{ fechaPanelCorta }}</span>
+
+          <ng-container *ngIf="accionDia === 'ninguna'">
+            <button type="button" (click)="accionDia = 'reemplazo'"
+              class="h-11 px-3.5 rounded-lg border border-border bg-surface-2 text-[13px] font-semibold text-left hover:border-text-muted transition">
+              Cambiar instructor ese día
             </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Listado eventos especiales -->
-      <div *ngIf="horariosEspeciales.length">
-        <h2 class="font-display italic font-extrabold uppercase text-xl tracking-wide mb-2.5">Eventos especiales</h2>
-        <div class="space-y-2">
-          <div *ngFor="let h of horariosEspeciales"
-            class="bg-surface border border-border border-l-4 border-l-accent-orange rounded-xl p-4 flex items-center justify-between gap-3">
-            <div [class.text-text-faint]="!h.activo">
-              <div class="font-bold text-sm" [class.line-through]="!h.activo">{{ h.clases?.nombre }}</div>
-              <div class="text-xs text-text-muted mt-0.5 tabular-nums">
-                {{ h.fecha_especifica }} · {{ h.hora.slice(0,5) }} ({{ h.duracion_minutos }} min) · {{ h.instructores?.nombre }} · cupo {{ h.capacidad }}
-              </div>
-            </div>
-            <button (click)="toggleActivo(h)"
-              class="text-xs font-extrabold uppercase tracking-wider px-3 py-1.5 rounded-lg border transition shrink-0"
-              [class.border-accent]="!h.activo" [class.text-accent]="!h.activo"
-              [class.border-border]="h.activo" [class.text-text-muted]="h.activo">
-              {{ h.activo ? 'Desactivar' : 'Activar' }}
+            <button type="button" (click)="accionDia = 'cancelar'"
+              class="h-11 px-3.5 rounded-lg border border-border bg-surface-2 text-[13px] font-semibold text-left text-red-300 hover:border-danger transition">
+              Cancelar la clase ese día
             </button>
+          </ng-container>
+
+          <div *ngIf="accionDia === 'reemplazo'" class="flex flex-col gap-2">
+            <label for="e-reemplazo" class="text-xs text-text-muted">¿Quién la da el {{ fechaPanelCorta }}?</label>
+            <select id="e-reemplazo" [(ngModel)]="fReemplazoId" name="reemplazo"
+              class="h-11 bg-surface-2 border border-border rounded-lg px-2.5 text-sm text-text focus:outline-none focus:border-accent">
+              <option value="" disabled>Elige un instructor</option>
+              <option *ngFor="let i of instructoresOpciones" [value]="i.id" [disabled]="i.id === h.instructor_id">{{ i.nombre }}</option>
+            </select>
+            <div class="flex gap-2">
+              <button type="button" (click)="accionDia = 'ninguna'" class="flex-1 h-11 rounded-lg border border-border text-[13px] font-semibold">Volver</button>
+              <button type="button" (click)="aplicarAccionDia()" [disabled]="guardando" class="flex-1 h-11 rounded-lg bg-accent text-on-accent text-xs font-extrabold uppercase tracking-wider disabled:opacity-50">Guardar</button>
+            </div>
+          </div>
+
+          <div *ngIf="accionDia === 'cancelar'" class="flex flex-col gap-2">
+            <p class="text-[13px] text-text leading-relaxed">
+              ¿Cancelar {{ h.clases?.nombre }} el {{ fechaPanelCorta }}?
+              <span *ngIf="reservasEnPanel > 0" class="text-accent-orange">Hay {{ reservasEnPanel }} {{ reservasEnPanel === 1 ? 'persona reservada' : 'personas reservadas' }}: avísales.</span>
+            </p>
+            <div class="flex gap-2">
+              <button type="button" (click)="accionDia = 'ninguna'" class="flex-1 h-11 rounded-lg border border-border text-[13px] font-semibold">No</button>
+              <button type="button" (click)="aplicarAccionDia()" [disabled]="guardando" class="flex-1 h-11 rounded-lg bg-danger text-white text-xs font-extrabold uppercase tracking-wider disabled:opacity-50">Sí, cancelar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toda la serie -->
+        <div class="border-t border-border pt-4 flex flex-col gap-2">
+          <span class="text-xs font-bold text-text-muted">{{ h.fecha_especifica ? 'Este evento' : 'Todas las semanas' }}</span>
+          <button type="button" *ngIf="!confirmandoDesactivar" (click)="confirmandoDesactivar = true"
+            class="h-11 px-3.5 rounded-lg border border-border text-[13px] font-semibold text-left text-text-muted hover:text-text transition">
+            {{ h.fecha_especifica ? 'Desactivar este evento' : 'Desactivar esta clase' }}
+          </button>
+          <div *ngIf="confirmandoDesactivar" class="flex flex-col gap-2">
+            <p class="text-[13px] leading-relaxed">Dejará de aparecer para reservar. Podrás reactivarla desde la lista de desactivadas.</p>
+            <div class="flex gap-2">
+              <button type="button" (click)="confirmandoDesactivar = false" class="flex-1 h-11 rounded-lg border border-border text-[13px] font-semibold">No</button>
+              <button type="button" (click)="desactivar()" class="flex-1 h-11 rounded-lg bg-surface-2 border border-danger text-red-300 text-xs font-extrabold uppercase tracking-wider">Sí, desactivar</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Calendario -->
-    <div class="bg-surface border border-border rounded-xl p-4 gym-calendar lg:sticky lg:top-4 shadow-xl">
-      <full-calendar [options]="calendarOptions"></full-calendar>
-    </div>
+    </aside>
   </div>
+
+  <!-- Desactivadas -->
+  <section *ngIf="desactivados.length" class="bg-surface border border-border rounded-xl overflow-hidden max-w-3xl">
+    <h2 class="px-5 py-3.5 border-b border-border font-display italic font-extrabold uppercase text-xl">Clases desactivadas</h2>
+    <div *ngFor="let h of desactivados" class="flex flex-wrap items-center gap-3 px-5 py-3 border-b border-surface-2 last:border-b-0">
+      <span class="w-2.5 h-2.5 rounded-sm shrink-0 opacity-60" [style.background-color]="colorNombre(h.clases?.nombre)" aria-hidden="true"></span>
+      <div class="flex-1 min-w-[160px]">
+        <div class="text-sm font-bold text-text-muted">{{ h.clases?.nombre }}</div>
+        <div class="text-xs text-text-muted first-letter:uppercase">{{ descripcionHorario(h) }}</div>
+      </div>
+      <button type="button" (click)="activar(h)" class="h-10 px-3.5 rounded-lg border border-accent text-accent text-xs font-bold hover:bg-accent hover:text-on-accent transition">Activar</button>
+    </div>
+  </section>
 </div>
+
+<!-- Campos compartidos: duración y cupo -->
+<ng-template #duracionYCupo>
+  <fieldset class="flex flex-col gap-1.5">
+    <legend class="text-xs font-bold text-text-muted mb-1.5">Duración</legend>
+    <div class="grid grid-cols-4 gap-2">
+      <button type="button" *ngFor="let m of duraciones" (click)="fDuracion = m" [attr.aria-pressed]="fDuracion === m"
+        class="h-10 rounded-lg border text-[13px] font-bold transition"
+        [ngClass]="fDuracion === m ? 'bg-accent border-accent text-on-accent' : 'bg-surface-2 border-border text-text'">
+        {{ m }} min
+      </button>
+    </div>
+  </fieldset>
+  <fieldset class="flex flex-col gap-1.5">
+    <legend class="text-xs font-bold text-text-muted mb-1.5">Cupo</legend>
+    <div class="flex items-center gap-2.5">
+      <button type="button" (click)="cupoMenos()" aria-label="Quitar un cupo" class="w-11 h-11 rounded-lg border border-border bg-surface-2 text-xl">−</button>
+      <input type="number" min="1" [(ngModel)]="fCupo" [ngModelOptions]="{ standalone: true }" aria-label="Cupo"
+        class="w-16 h-11 text-center bg-transparent font-display font-extrabold text-3xl tabular-nums focus:outline-none" />
+      <button type="button" (click)="cupoMas()" aria-label="Agregar un cupo" class="w-11 h-11 rounded-lg border border-border bg-surface-2 text-xl">+</button>
+      <span class="text-xs text-text-muted">personas</span>
+    </div>
+  </fieldset>
+</ng-template>

@@ -1,78 +1,161 @@
-<div class="min-h-screen bg-gym-stripes p-6 sm:p-8">
-  <div class="max-w-5xl mx-auto">
-    <h1 class="font-display italic font-black uppercase text-4xl sm:text-5xl tracking-wide mb-1">
-      Reserva tus clases
-    </h1>
-    <p class="text-text-muted text-sm mb-6">Elige tu próxima clase o gestiona tus reservas.</p>
+<div class="min-h-screen bg-gym-stripes pb-28 sm:pb-10">
+  <div class="max-w-3xl mx-auto px-4 sm:px-8 pt-5 sm:pt-8">
 
-    <div *ngIf="loading" class="text-text-muted text-sm">Cargando...</div>
+    <p class="text-sm text-text-muted" *ngIf="auth.profile() as p">Hola, {{ p.nombre }}</p>
+    <h1 class="font-display italic font-black uppercase text-4xl sm:text-5xl leading-none mt-1">
+      {{ vista === 'clases' ? 'Reserva tu clase' : 'Mis reservas' }}
+    </h1>
+
+    <!-- Navegación: abajo en móvil, pestañas arriba en pantallas grandes -->
+    <nav aria-label="Secciones"
+      class="fixed sm:static inset-x-0 bottom-0 z-40 sm:z-auto flex justify-around sm:justify-start sm:gap-2 bg-[#111111] sm:bg-transparent border-t sm:border-t-0 sm:border-b border-border px-2 sm:px-0 pt-2 pb-6 sm:pb-0 sm:pt-0 sm:mt-6">
+      <button type="button" (click)="vista = 'clases'" [attr.aria-current]="vista === 'clases' ? 'page' : null"
+        class="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 min-w-[96px] sm:min-w-0 h-14 sm:h-11 sm:px-4 text-xs sm:text-sm font-bold border-b-0 sm:border-b-[3px] transition"
+        [ngClass]="vista === 'clases' ? 'text-accent sm:text-text sm:border-accent' : 'text-text-muted sm:border-transparent hover:text-text'">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+        Clases
+      </button>
+      <button type="button" (click)="vista = 'reservas'" [attr.aria-current]="vista === 'reservas' ? 'page' : null"
+        class="relative flex flex-col sm:flex-row items-center gap-1 sm:gap-2 min-w-[96px] sm:min-w-0 h-14 sm:h-11 sm:px-4 text-xs sm:text-sm font-bold border-b-0 sm:border-b-[3px] transition"
+        [ngClass]="vista === 'reservas' ? 'text-accent sm:text-text sm:border-accent' : 'text-text-muted sm:border-transparent hover:text-text'">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        Mis reservas
+        <span *ngIf="misReservas.length > 0"
+          class="absolute sm:static top-0 right-5 min-w-[18px] h-[18px] px-1 rounded-full bg-accent-orange text-on-accent text-[11px] font-extrabold flex items-center justify-center">
+          {{ misReservas.length }}
+        </span>
+      </button>
+    </nav>
+
+    <p *ngIf="loading" class="text-text-muted text-sm mt-6">Cargando...</p>
 
     <ng-container *ngIf="!loading">
-      <div *ngIf="!membresiaActiva"
-        class="bg-danger/10 border border-danger/40 text-red-300 text-sm px-5 py-4 rounded-xl mb-6">
-        Tu membresía está pendiente de aprobación por el gym. Podrás reservar clases una vez sea activada.
+
+      <!-- Plan -->
+      <section aria-label="Tu plan" class="mt-5 bg-surface border border-border rounded-xl px-4 py-4 flex flex-col gap-2.5" *ngIf="membresiaActiva">
+        <div class="flex items-baseline justify-between gap-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-text-muted">{{ planNombre }}</span>
+          <span class="text-xs text-text-muted" *ngIf="venceTexto">{{ venceTexto }}</span>
+        </div>
+        <div class="flex items-baseline gap-2" *ngIf="!esIlimitado">
+          <span class="font-display italic font-black text-4xl leading-none text-accent tabular-nums">{{ clasesRestantes ?? 0 }}</span>
+          <span class="text-sm text-text">
+            {{ clasesIncluidas ? 'de ' + clasesIncluidas + ' clases disponibles' : 'clases disponibles' }}
+          </span>
+        </div>
+        <div class="flex items-baseline gap-2" *ngIf="esIlimitado">
+          <span class="font-display italic font-black text-3xl leading-none text-accent">Clases ilimitadas</span>
+        </div>
+        <div class="h-1.5 rounded-full bg-border overflow-hidden" *ngIf="!esIlimitado && clasesIncluidas">
+          <div class="h-1.5 rounded-full bg-accent" [style.width.%]="progresoPlan"></div>
+        </div>
+      </section>
+
+      <div *ngIf="!membresiaActiva" role="status"
+        class="mt-5 bg-surface border border-accent-orange/60 text-text text-sm px-4 py-4 rounded-xl leading-relaxed">
+        Tu membresía está pendiente de aprobación. Podrás reservar en cuanto el gimnasio la active.
       </div>
 
-      <div *ngIf="membresiaActiva && !esIlimitado"
-        class="bg-surface border-2 border-accent rounded-xl px-5 py-4 mb-8 flex flex-wrap items-center gap-3 shadow-[0_0_24px_rgba(247,255,20,0.12)]">
-        <span class="text-base text-text">
-          Te quedan <span class="text-accent font-display italic font-black text-2xl mx-1">{{ clasesRestantes }} clases</span> en tu plan
-        </span>
-        <span class="bg-accent text-[#0C0C0C] text-xs font-extrabold uppercase tracking-wider px-2.5 py-1 rounded">
-          Plan activo
-        </span>
-      </div>
-
-      <!-- Mis próximas reservas -->
-      <div class="mb-10">
-        <h2 class="font-display italic font-extrabold uppercase text-2xl tracking-wide mb-3">
-          Mis próximas reservas
-        </h2>
-        <div *ngIf="misReservas.length === 0"
-          class="bg-surface border border-border rounded-xl p-5 text-text-muted text-sm">
-          No tienes reservas activas.
+      <!-- ===== Vista: clases ===== -->
+      <ng-container *ngIf="vista === 'clases'">
+        <div class="flex gap-2 mt-5 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0" role="tablist" aria-label="Días">
+          <button type="button" *ngFor="let d of dias" role="tab" [attr.aria-selected]="d.fecha === diaSeleccionado"
+            (click)="diaSeleccionado = d.fecha"
+            class="shrink-0 w-[60px] h-[66px] rounded-xl border flex flex-col items-center justify-center gap-0.5 transition"
+            [ngClass]="d.fecha === diaSeleccionado ? 'bg-accent border-accent text-on-accent' : 'bg-surface border-border text-text hover:border-text-muted'">
+            <span class="text-[11px] font-bold tracking-wider">{{ d.corto }}</span>
+            <span class="font-display font-extrabold text-2xl leading-none">{{ d.numero }}</span>
+            <span class="w-1 h-1 rounded-full mt-0.5"
+              [ngClass]="clasesEn(d.fecha) > 0 ? (d.fecha === diaSeleccionado ? 'bg-on-accent' : 'bg-text-muted') : 'bg-transparent'"></span>
+          </button>
         </div>
 
-        <div *ngIf="misReservas.length > 0" class="bg-surface border border-border rounded-xl divide-y divide-border overflow-hidden">
-          <div *ngFor="let r of misReservas"
-            class="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-surface-2/60 transition">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-6 flex-1 items-center">
-              <div class="font-bold text-base text-text">{{ r.clase_nombre }}</div>
-              <div class="text-sm text-text-muted">{{ r.fecha_clase }}</div>
-              <div class="text-sm font-semibold text-text tabular-nums">{{ r.hora }}</div>
+        <div class="flex items-center justify-between mt-5 mb-2.5">
+          <h2 class="font-display italic font-extrabold uppercase text-xl">{{ diaActual?.titulo }}</h2>
+          <span class="text-xs text-text-muted">{{ clasesDelDia.length }} {{ clasesDelDia.length === 1 ? 'clase' : 'clases' }}</span>
+        </div>
+
+        <p *ngIf="clasesDelDia.length === 0" class="bg-surface border border-border rounded-xl px-4 py-5 text-sm text-text-muted">
+          No hay más clases este día. Elige otro día arriba.
+        </p>
+
+        <div class="flex flex-col gap-2.5">
+          <article *ngFor="let c of clasesDelDia"
+            class="bg-surface border rounded-xl p-3.5 flex flex-wrap items-center gap-3.5"
+            [ngClass]="c.miReservaId ? 'border-accent' : 'border-border'">
+            <div class="w-14 shrink-0">
+              <div class="font-display font-extrabold text-2xl leading-none tabular-nums">{{ c.hora }}</div>
+              <div class="text-[11px] text-text-muted mt-1" *ngIf="c.duracion">{{ c.duracion }} min</div>
             </div>
-            <button (click)="cancelar(r)" [disabled]="r.cancelando"
-              class="bg-transparent border border-accent-orange text-accent-orange rounded-lg px-4 py-2 text-xs font-extrabold uppercase tracking-wider hover:bg-accent-orange hover:text-[#0C0C0C] transition disabled:opacity-50">
-              {{ r.cancelando ? '...' : 'Cancelar' }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Próximas clases disponibles -->
-      <div>
-        <h2 class="font-display italic font-extrabold uppercase text-2xl tracking-wide mb-3">
-          Próximas clases disponibles
-        </h2>
-        <div class="bg-surface border border-border rounded-xl divide-y divide-border overflow-hidden">
-          <div *ngFor="let c of clasesDisponibles"
-            class="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-surface-2/60 transition">
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-1 sm:gap-4 flex-1 items-center">
-              <div class="font-bold text-base text-text">{{ c.clase_nombre }}</div>
-              <div class="text-sm text-text-muted">{{ c.fechaDisplay }} · {{ c.hora }}</div>
-              <div class="text-sm text-text">{{ c.instructor_nombre }}</div>
-              <div class="text-xs font-semibold text-text-muted tabular-nums">
-                {{ c.ocupadas }}/{{ c.capacidad }} cupos ocupados
+            <div class="flex-1 min-w-[140px] flex flex-col gap-1">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-sm shrink-0" [style.background-color]="c.color" aria-hidden="true"></span>
+                <span class="font-bold text-[15px]">{{ c.clase_nombre }}</span>
+                <span *ngIf="c.esEspecial" class="text-[11px] font-bold px-1.5 py-0.5 rounded" [style.background-color]="fondoColor(c.color)" [style.color]="c.color">Especial</span>
+              </div>
+              <div class="text-xs text-text-muted">con {{ c.instructor_nombre }}<span *ngIf="c.reemplazo" class="text-accent-orange"> · reemplazo</span></div>
+              <div class="flex items-center gap-2">
+                <div class="flex-1 h-1 rounded-full bg-border overflow-hidden">
+                  <div class="h-1" [style.width.%]="porcentaje(c)" [style.background-color]="colorBarra(c)"></div>
+                </div>
+                <span class="text-[11px] text-text-muted tabular-nums">{{ cuposTexto(c) }}</span>
               </div>
             </div>
-            <button (click)="reservar(c)" [disabled]="c.reservando || !puedeReservar() || c.ocupadas >= c.capacidad"
-              class="rounded-lg px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider transition disabled:cursor-not-allowed"
-              [ngClass]="{ 'bg-accent text-[#0C0C0C] hover:brightness-110': c.ocupadas < c.capacidad, 'bg-surface-2 border border-danger/40 text-danger': c.ocupadas >= c.capacidad, 'opacity-60': c.reservando || !puedeReservar() }">
-              {{ c.ocupadas >= c.capacidad ? 'Sin cupo' : (c.reservando ? '...' : 'Reservar') }}
-            </button>
-          </div>
+
+            <!-- Acción -->
+            <ng-container *ngIf="c.miReservaId as rid">
+              <div class="flex gap-2 w-full sm:w-auto" *ngIf="confirmandoCancelar === rid">
+                <button type="button" (click)="noCancelar()" class="flex-1 sm:flex-none h-11 px-3.5 rounded-lg border border-border text-sm font-semibold">No</button>
+                <button type="button" (click)="cancelar(rid, c.clase_nombre)" class="flex-1 sm:flex-none h-11 px-3.5 rounded-lg bg-danger text-white text-xs font-extrabold uppercase tracking-wider">Sí, cancelar</button>
+              </div>
+              <button type="button" *ngIf="confirmandoCancelar !== rid" (click)="pedirCancelar(rid)" [disabled]="procesando === rid"
+                class="w-full sm:w-auto min-w-[112px] h-11 rounded-lg border border-accent text-accent text-xs font-extrabold uppercase tracking-wider disabled:opacity-50">
+                ✓ Reservada
+              </button>
+            </ng-container>
+            <ng-container *ngIf="!c.miReservaId">
+              <button type="button" *ngIf="llena(c)" disabled
+                class="w-full sm:w-auto min-w-[112px] h-11 rounded-lg border border-border bg-surface-2 text-text-muted text-xs font-extrabold uppercase tracking-wider">
+                Llena
+              </button>
+              <button type="button" *ngIf="!llena(c)" (click)="reservar(c)" [disabled]="!puedeReservar() || procesando === clave(c)"
+                class="w-full sm:w-auto min-w-[112px] h-11 rounded-lg bg-accent text-on-accent text-xs font-extrabold uppercase tracking-wider hover:brightness-110 transition disabled:opacity-40">
+                {{ procesando === clave(c) ? 'Reservando...' : 'Reservar' }}
+              </button>
+            </ng-container>
+          </article>
         </div>
-      </div>
+
+        <p *ngIf="membresiaActiva && !puedeReservar()" class="text-xs text-text-muted mt-3">
+          Ya usaste todas las clases de tu plan. Renueva con el gimnasio para seguir reservando.
+        </p>
+      </ng-container>
+
+      <!-- ===== Vista: mis reservas ===== -->
+      <ng-container *ngIf="vista === 'reservas'">
+        <p *ngIf="misReservas.length === 0" class="mt-5 bg-surface border border-border rounded-xl px-4 py-5 text-sm text-text-muted">
+          No tienes reservas próximas.
+          <button type="button" (click)="vista = 'clases'" class="text-accent font-bold ml-1">Reservar una clase</button>
+        </p>
+
+        <div class="flex flex-col gap-2.5 mt-5">
+          <article *ngFor="let r of misReservas" class="bg-surface border border-border rounded-xl p-4 flex flex-wrap items-center gap-3.5">
+            <span class="w-2.5 h-2.5 rounded-sm shrink-0" [style.background-color]="r.color" aria-hidden="true"></span>
+            <div class="flex-1 min-w-[140px]">
+              <div class="font-bold text-[15px]">{{ r.clase_nombre }}</div>
+              <div class="text-xs text-text-muted mt-0.5 tabular-nums">{{ fechaReserva(r) }} · {{ r.hora }}</div>
+            </div>
+            <div class="flex gap-2" *ngIf="confirmandoCancelar === r.id">
+              <button type="button" (click)="noCancelar()" class="h-11 px-3.5 rounded-lg border border-border text-sm font-semibold">No</button>
+              <button type="button" (click)="cancelar(r.id, r.clase_nombre)" class="h-11 px-3.5 rounded-lg bg-danger text-white text-xs font-extrabold uppercase tracking-wider">Sí, cancelar</button>
+            </div>
+            <button type="button" *ngIf="confirmandoCancelar !== r.id" (click)="pedirCancelar(r.id)" [disabled]="procesando === r.id"
+              class="h-11 px-4 rounded-lg border border-border text-text-muted text-xs font-bold hover:border-danger hover:text-danger transition disabled:opacity-50">
+              {{ procesando === r.id ? 'Cancelando...' : 'Cancelar' }}
+            </button>
+          </article>
+        </div>
+      </ng-container>
     </ng-container>
   </div>
 </div>
