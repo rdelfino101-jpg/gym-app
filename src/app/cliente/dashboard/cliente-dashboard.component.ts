@@ -128,8 +128,11 @@ export class ClienteDashboardComponent implements OnInit {
     this.clasesRestantes = m.clases_restantes;
     this.clasesIncluidas = m.planes_membresia?.clases_incluidas ?? null;
     if (m.fecha_fin) {
-      const f = desdeFecha(String(m.fecha_fin).slice(0, 10));
-      this.venceTexto = `Vence ${f.getDate()} ${MESES[f.getMonth()]}`;
+      const fin = String(m.fecha_fin).slice(0, 10);
+      const f = desdeFecha(fin);
+      const anio = f.getFullYear() !== new Date().getFullYear() ? ` ${f.getFullYear()}` : '';
+      const vencida = fin < fechaLocal(new Date());
+      this.venceTexto = `${vencida ? 'Venció' : 'Vence'} el ${f.getDate()} ${MESES[f.getMonth()]}${anio}`;
     } else {
       this.venceTexto = '';
     }
@@ -262,12 +265,18 @@ export class ClienteDashboardComponent implements OnInit {
   }
 
   colorBarra(c: ClaseDisponible): string {
+    if (this.sinCupo(c)) return '#2A2A2A';
     if (this.llena(c)) return '#FF3B30';
     return c.ocupadas / c.capacidad >= 0.8 ? '#FF7A1A' : '#F7FF14';
   }
 
+  sinCupo(c: ClaseDisponible): boolean {
+    return c.capacidad <= 0;
+  }
+
   cuposTexto(c: ClaseDisponible): string {
-    if (c.capacidad <= 0 || this.llena(c)) return 'Llena';
+    if (this.sinCupo(c)) return 'No disponible';
+    if (this.llena(c)) return 'Llena';
     const libres = c.capacidad - c.ocupadas;
     return libres === 1 ? '1 cupo' : `${libres} cupos`;
   }

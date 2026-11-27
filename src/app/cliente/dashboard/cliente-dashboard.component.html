@@ -35,7 +35,7 @@
       <section aria-label="Tu plan" class="mt-5 bg-surface border border-border rounded-xl px-4 py-4 flex flex-col gap-2.5" *ngIf="membresiaActiva">
         <div class="flex items-baseline justify-between gap-3">
           <span class="text-xs font-bold uppercase tracking-wider text-text-muted">{{ planNombre }}</span>
-          <span class="text-xs text-text-muted" *ngIf="venceTexto">{{ venceTexto }}</span>
+          <span class="text-xs" *ngIf="venceTexto" [ngClass]="venceTexto.startsWith('Venció') ? 'text-red-300 font-semibold' : 'text-text-muted'">{{ venceTexto }}</span>
         </div>
         <div class="flex items-baseline gap-2" *ngIf="!esIlimitado">
           <span class="font-display italic font-black text-4xl leading-none text-accent tabular-nums">{{ clasesRestantes ?? 0 }}</span>
@@ -116,7 +116,7 @@
             <ng-container *ngIf="!c.miReservaId">
               <button type="button" *ngIf="llena(c)" disabled
                 class="w-full sm:w-auto min-w-[112px] h-11 rounded-lg border border-border bg-surface-2 text-text-muted text-xs font-extrabold uppercase tracking-wider">
-                Llena
+                {{ sinCupo(c) ? 'No disponible' : 'Llena' }}
               </button>
               <button type="button" *ngIf="!llena(c)" (click)="reservar(c)" [disabled]="!puedeReservar() || procesando === clave(c)"
                 class="w-full sm:w-auto min-w-[112px] h-11 rounded-lg bg-accent text-on-accent text-xs font-extrabold uppercase tracking-wider hover:brightness-110 transition disabled:opacity-40">

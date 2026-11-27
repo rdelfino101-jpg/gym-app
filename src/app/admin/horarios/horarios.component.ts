@@ -238,7 +238,7 @@ export class HorariosComponent implements OnInit {
 
   meta(o: Ocurrencia): { texto: string; color: string } {
     const h = o.horario;
-    if (h.capacidad <= 0) return { texto: 'Revisar cupo', color: '#FF3B30' };
+    if (h.capacidad <= 0) return { texto: 'Cupo 0', color: '#FF3B30' };
     if (o.excepcion?.tipo === 'cancelada') return { texto: 'Cancelada este día', color: '#FF3B30' };
     if (o.excepcion?.tipo === 'instructor_reemplazo') return { texto: `Reemplazo · ${o.reservas}/${h.capacidad}`, color: '#FF7A1A' };
     if (h.fecha_especifica) return { texto: `Especial · ${o.reservas}/${h.capacidad}`, color: this.color(o) };
